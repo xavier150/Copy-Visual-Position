@@ -25,7 +25,7 @@ bl_info = {
 	'name': 'Copy Visual Position',
 	'description': "This addons Copy Visual Position allows to easily copy / paste the visual position of several elements in the scene like Objects, Bones or Vertex and other element in EditMod.",
 	'author': 'Loux Xavier (BleuRaven)',
-	'version': (0, 1, 0),
+	'version': (0, 1, 1),
 	'blender': (2, 79, 0),
 	'location': 'View3D > Tool > Copy Visual Position',
 	'warning': '',
@@ -444,6 +444,31 @@ class PasteVisualVertPosButton(bpy.types.Operator):
 		
 ########################### [Function] ###########################
 
+def ApplyRealMatrixWorldObj(obj, matrix):
+	for cons in obj.constraints:
+		if cons.type == "CHILD_OF":
+			if cons.mute == False:
+				if cons.target is not None:
+					Child = cons.inverse_matrix
+					par = cons.target.matrix_world
+					obj.matrix_world = Child.inverted()*par.inverted()*matrix
+					return
+	obj.matrix_world = matrix
+	
+def ApplyRealMatrixWorldBones(bone, obj, matrix):
+	for cons in bone.constraints:
+		if cons.type == "CHILD_OF":
+			if cons.mute == False:
+				if cons.target is not None:
+					Child = cons.inverse_matrix
+					if cons.target.type == "ARMATURE":
+						par = obj.matrix_world * obj.pose.bones[cons.subtarget].matrix
+					else:
+						par = cons.target.matrix_world
+					bone.matrix = obj.matrix_world.inverted() * (Child.inverted()*par.inverted()*matrix)
+					return
+	bone.matrix = obj.matrix_world.inverted() * matrix
+	
 def FindItemInListByName(item, list):
 	for TargetItem in list:
 		if TargetItem.name == item:
@@ -458,7 +483,8 @@ def SetVisualObjPos(obj, loc, rot, scale, UseLoc, UseRot, UseScale):
 	#ApplyPos
 	mat_loc = Matrix.Translation(loc)
 	mat_rot = rot.to_matrix().to_4x4()
-	obj.matrix_world = mat_loc * mat_rot
+	matrix = mat_loc * mat_rot
+	ApplyRealMatrixWorldObj(obj, matrix)
 	obj.scale = scale
 	#ResetNotDesiredValue
 	if UseLoc == False:
@@ -502,7 +528,8 @@ def SetVisualBonePos(obj, Bone, loc, rot, scale, UseLoc, UseRot, UseScale):
 	#ApplyPos	
 	mat_loc = Matrix.Translation(loc)
 	mat_rot = rot.to_matrix().to_4x4()
-	Bone.matrix = obj.matrix_world.inverted() * mat_loc * mat_rot
+	matrix = mat_loc * mat_rot
+	ApplyRealMatrixWorldBones(Bone, obj, matrix)
 	Bone.scale = scale
 	#ResetNotDesiredValue
 	if UseLoc == False:
