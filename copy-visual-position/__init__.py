@@ -25,7 +25,7 @@ bl_info = {
 	'name': 'Copy Visual Position',
 	'description': "This addons Copy Visual Position allows to easily copy / paste the visual position of several elements in the scene like Objects, Bones or Vertex and other element in EditMod.",
 	'author': 'Loux Xavier (BleuRaven)',
-	'version': (0, 1, 1),
+	'version': (0, 1, 2),
 	'blender': (2, 79, 0),
 	'location': 'View3D > Tool > Copy Visual Position',
 	'warning': '',
@@ -41,12 +41,19 @@ import math
 import copy
 from math import radians
 from mathutils import *
+from bpy.props import (
+		StringProperty,
+		FloatProperty,
+		IntProperty,
+		FloatVectorProperty,
+		CollectionProperty,
+		)
 
 
 ########################### [UI (One by one)] ###########################
 
 class VisualPoseOneByOne(bpy.types.Panel): #Is Export panel
-	bpy.types.Scene.LastVisualLocation = bpy.props.FloatVectorProperty(
+	bpy.types.Scene.LastVisualLocation = FloatVectorProperty(
 		name = "VisualLocation",
 		description	 = "",
 		default = (0,0,0),
@@ -54,7 +61,7 @@ class VisualPoseOneByOne(bpy.types.Panel): #Is Export panel
 		size=3
 		)
 
-	bpy.types.Scene.LastVisualRotation = bpy.props.FloatVectorProperty(
+	bpy.types.Scene.LastVisualRotation = FloatVectorProperty(
 		name = "VisualRotation",
 		description	 = "",
 		default = (0,0,0),
@@ -62,7 +69,7 @@ class VisualPoseOneByOne(bpy.types.Panel): #Is Export panel
 		size=3
 		)
 		
-	bpy.types.Scene.LastVisualScale = bpy.props.FloatVectorProperty(
+	bpy.types.Scene.LastVisualScale = FloatVectorProperty(
 		name = "VisualScale:",
 		description	 = "",
 		default = (1,1,1),
@@ -125,14 +132,14 @@ class CopyVisualObjLocButton(bpy.types.Operator):
 	bl_description = "Contpy the visual location of the active object"
 
 	def execute(self, context):	
-		Scene = bpy.context.scene
+		scene = bpy.context.scene
 		obj = bpy.context.active_object
 		if bpy.context.object.mode == "OBJECT":
-			Scene.LastVisualLocation = obj.matrix_world * (obj.location * 0)
+			scene.LastVisualLocation = obj.matrix_world * (obj.location * 0)
 		if bpy.context.object.mode == "POSE":
-			Scene.LastVisualLocation = GetVisualBonePos(bpy.context.active_object, bpy.context.active_pose_bone)[0]
+			scene.LastVisualLocation = GetVisualBonePos(bpy.context.active_object, bpy.context.active_pose_bone)[0]
 		if bpy.context.object.mode == "EDIT":
-			Scene.LastVisualLocation = GetVisualVertLoc(bpy.context.active_object)
+			scene.LastVisualLocation = GetVisualVertLoc(bpy.context.active_object)
 		return {'FINISHED'}
 		
 		
@@ -142,12 +149,12 @@ class CopyVisualObjRotButton(bpy.types.Operator):
 	bl_description = "Copy the visual rotation of the active object"
 
 	def execute(self, context):		
-		Scene = bpy.context.scene
+		scene = bpy.context.scene
 		obj = bpy.context.active_object
 		if bpy.context.object.mode == "OBJECT":
-			Scene.LastVisualRotation = obj.matrix_world.to_euler()
+			scene.LastVisualRotation = obj.matrix_world.to_euler()
 		if bpy.context.object.mode == "POSE":
-			Scene.LastVisualRotation = GetVisualBonePos(bpy.context.active_object, bpy.context.active_pose_bone)[1]
+			scene.LastVisualRotation = GetVisualBonePos(bpy.context.active_object, bpy.context.active_pose_bone)[1]
 		return {'FINISHED'}
 		
 		
@@ -157,12 +164,12 @@ class CopyObjScaleButton(bpy.types.Operator):
 	bl_description = "Copy the scale of the active object"
 
 	def execute(self, context):		
-		Scene = bpy.context.scene
+		scene = bpy.context.scene
 		obj = bpy.context.active_object
 		if bpy.context.object.mode == "OBJECT":
-			Scene.LastVisualScale = obj.scale
+			scene.LastVisualScale = obj.scale
 		if bpy.context.object.mode == "POSE":
-			Scene.LastVisualScale = GetVisualBonePos(bpy.context.active_object, bpy.context.active_pose_bone)[2]
+			scene.LastVisualScale = GetVisualBonePos(bpy.context.active_object, bpy.context.active_pose_bone)[2]
 		return {'FINISHED'}
 
 		
@@ -172,17 +179,17 @@ class CopyVisualObjPosButton(bpy.types.Operator):
 	bl_description = "Copy the visual position of the active object"
 
 	def execute(self, context):	
-		Scene = bpy.context.scene
+		scene = bpy.context.scene
 		obj = bpy.context.active_object
 		if bpy.context.object.mode == "OBJECT":
-			Scene.LastVisualLocation = obj.matrix_world * (obj.location * 0)
-			Scene.LastVisualRotation = obj.matrix_world.to_euler()
-			Scene.LastVisualScale =  obj.scale
+			scene.LastVisualLocation = obj.matrix_world * (obj.location * 0)
+			scene.LastVisualRotation = obj.matrix_world.to_euler()
+			scene.LastVisualScale =  obj.scale
 		if bpy.context.object.mode == "POSE":
 			Trans = GetVisualBonePos(bpy.context.active_object, bpy.context.active_pose_bone)
-			Scene.LastVisualLocation = Trans[0]
-			Scene.LastVisualRotation = Trans[1] 
-			Scene.LastVisualScale =  Trans[2]
+			scene.LastVisualLocation = Trans[0]
+			scene.LastVisualRotation = Trans[1] 
+			scene.LastVisualScale =  Trans[2]
 		return {'FINISHED'}
 
 		
@@ -192,10 +199,10 @@ class PasteVisualObjLocButton(bpy.types.Operator):
 	bl_description = "Paste the visual location to active object"
 
 	def execute(self, context):		
-		Scene = bpy.context.scene
-		loc = Vector(Scene.LastVisualLocation)
-		rot = Euler(Scene.LastVisualRotation, 'XYZ')
-		scale = Vector(Scene.LastVisualScale)
+		scene = bpy.context.scene
+		loc = Vector(scene.LastVisualLocation)
+		rot = Euler(scene.LastVisualRotation, 'XYZ')
+		scale = Vector(scene.LastVisualScale)
 		if bpy.context.object.mode == "OBJECT":
 			SetVisualObjPos(bpy.context.active_object, loc, rot, scale, True, False, False)
 		if bpy.context.object.mode == "POSE":
@@ -211,10 +218,10 @@ class PasteVisualObjRotButton(bpy.types.Operator):
 	bl_description = "Paste the visual rotation to active object"
 
 	def execute(self, context):		
-		Scene = bpy.context.scene
-		loc = Vector(Scene.LastVisualLocation)
-		rot = Euler(Scene.LastVisualRotation, 'XYZ')
-		scale = Vector(Scene.LastVisualScale)
+		scene = bpy.context.scene
+		loc = Vector(scene.LastVisualLocation)
+		rot = Euler(scene.LastVisualRotation, 'XYZ')
+		scale = Vector(scene.LastVisualScale)
 		obj = bpy.context.active_object
 		if bpy.context.object.mode == "OBJECT":
 			SetVisualObjPos(obj, loc, rot, scale, False, True, False)
@@ -230,10 +237,10 @@ class PasteObjScaleButton(bpy.types.Operator):
 	bl_description = "Paste the scale to active object"
 
 	def execute(self, context):		
-		Scene = bpy.context.scene
-		loc = Vector(Scene.LastVisualLocation)
-		rot = Euler(Scene.LastVisualRotation, 'XYZ')
-		scale = Vector(Scene.LastVisualScale)
+		scene = bpy.context.scene
+		loc = Vector(scene.LastVisualLocation)
+		rot = Euler(scene.LastVisualRotation, 'XYZ')
+		scale = Vector(scene.LastVisualScale)
 		obj = bpy.context.active_object
 		if bpy.context.object.mode == "OBJECT":
 			SetVisualObjPos(obj, loc, rot, scale, False, False, True)
@@ -249,10 +256,10 @@ class PasteVisualObjPosButton(bpy.types.Operator):
 	bl_description = "Paste the visual position to active object"
 
 	def execute(self, context):	
-		Scene = bpy.context.scene
-		loc = Vector(Scene.LastVisualLocation)
-		rot = Euler(Scene.LastVisualRotation, 'XYZ')
-		scale = Vector(Scene.LastVisualScale)
+		scene = bpy.context.scene
+		loc = Vector(scene.LastVisualLocation)
+		rot = Euler(scene.LastVisualRotation, 'XYZ')
+		scale = Vector(scene.LastVisualScale)
 		obj = bpy.context.active_object
 		if bpy.context.object.mode == "OBJECT":
 			SetVisualObjPos(obj, loc, rot, scale, True, True, True)
@@ -266,26 +273,26 @@ class PasteVisualObjPosButton(bpy.types.Operator):
 class VisualPosePacked(bpy.types.Panel): #Is Export panel
 
 	class SaveCopyPosition(bpy.types.PropertyGroup):
-		name = bpy.props.StringProperty(name="RefName", default="Unknown")
-		location = bpy.props.FloatVectorProperty(name="location")
-		rotation = bpy.props.FloatVectorProperty(name="rotation")
-		scale = bpy.props.FloatVectorProperty(name="scale")
+		elementName = StringProperty(default="Unknown")
+		location = FloatVectorProperty()
+		rotation = FloatVectorProperty()
+		scale = FloatVectorProperty()
+	
 	bpy.utils.register_class(SaveCopyPosition)
+	bpy.types.Scene.CopiedObjects = CollectionProperty(
+		type=SaveCopyPosition
+		)
+		
+	bpy.types.Scene.CopiedBones = CollectionProperty(
+		type=SaveCopyPosition
+		)
 	
 	class SaveCopyVertLoc(bpy.types.PropertyGroup):
-		id = bpy.props.IntProperty(name="Index")
-		location = bpy.props.FloatVectorProperty(name="location")
+		id = IntProperty(name="Index")
+		location = FloatVectorProperty(name="location")
 	bpy.utils.register_class(SaveCopyVertLoc)
-	
-	bpy.types.Scene.CopiedObjects = bpy.props.CollectionProperty(
-		type=SaveCopyPosition
-		)
-		
-	bpy.types.Scene.CopiedBones = bpy.props.CollectionProperty(
-		type=SaveCopyPosition
-		)
-		
-	bpy.types.Scene.CopiedVertex = bpy.props.CollectionProperty(
+			
+	bpy.types.Scene.CopiedVertex = CollectionProperty(
 		type=SaveCopyVertLoc
 		)
 	
@@ -338,14 +345,15 @@ class CopyVisualObjPosButton(bpy.types.Operator):
 	bl_description = "Contpy the visual position from selected objects"
 
 	def execute(self, context):		
-		Scene = bpy.context.scene
-		Scene.CopiedObjects.clear()
+		scene = bpy.context.scene
+		scene.CopiedObjects.clear()
 		PosList = GetVisualObjsPosPacked(bpy.context.selected_objects)
 		for pos in PosList:
-			Scene.CopiedObjects.add().name = pos[0]
-			Scene.CopiedObjects[pos[0]].location = pos[1]
-			Scene.CopiedObjects[pos[0]].rotation = pos[2]
-			Scene.CopiedObjects[pos[0]].scale = pos[3]
+			PosProp = scene.CopiedObjects.add()
+			PosProp.elementName = pos[0]
+			PosProp.location = pos[1]
+			PosProp.rotation = pos[2]
+			PosProp.scale = pos[3]
 		return {'FINISHED'}
 		
 		
@@ -355,14 +363,15 @@ class CopyVisualBonePosButton(bpy.types.Operator):
 	bl_description = "Contpy the visual position from selected pose bones"
 
 	def execute(self, context):		
-		Scene = bpy.context.scene
-		Scene.CopiedBones.clear()
+		scene = bpy.context.scene
+		scene.CopiedBones.clear()
 		PosList = GetVisualBonesPosPacked(bpy.context.active_object, bpy.context.selected_pose_bones)
-		for pos in PosList:
-			Scene.CopiedBones.add().name = pos[0]
-			Scene.CopiedBones[pos[0]].location = pos[1]
-			Scene.CopiedBones[pos[0]].rotation = pos[2]
-			Scene.CopiedBones[pos[0]].scale = pos[3]
+		for pos in PosList:			
+			PosProp = scene.CopiedBones.add()
+			PosProp.elementName = pos[0]
+			PosProp.location = pos[1]
+			PosProp.rotation = pos[2]
+			PosProp.scale = pos[3]
 		return {'FINISHED'}
 		
 		
@@ -372,8 +381,8 @@ class CopyVisualVertPosButton(bpy.types.Operator):
 	bl_description = "Contpy the visual position from selected mesh vertex"
 
 	def execute(self, context):		
-		Scene = bpy.context.scene
-		Scene.CopiedVertex.clear()
+		scene = bpy.context.scene
+		scene.CopiedVertex.clear()
 		PosList = []
 		obj = bpy.context.edit_object
 		me = obj.data
@@ -386,7 +395,7 @@ class CopyVisualVertPosButton(bpy.types.Operator):
 				print(ref)
 		for pos in PosList:
 			id = pos[0]
-			prop = Scene.CopiedVertex.add()
+			prop = scene.CopiedVertex.add()
 			prop.id = id
 			prop.location = pos[1]
 		return {'FINISHED'}
@@ -398,10 +407,10 @@ class PasteVisualObjPosButton(bpy.types.Operator):
 	bl_description = "Paste the visual position to selected objects"
 
 	def execute(self, context):		
-		Scene = bpy.context.scene
+		scene = bpy.context.scene
 		PosList = []
-		for co in Scene.CopiedObjects:
-			PosList.append((co.name, co.location, co.rotation, co.scale))
+		for co in scene.CopiedObjects:
+			PosList.append((co.elementName, co.location, co.rotation, co.scale))
 		SetVisualObjsPosPacked(bpy.context.selected_objects, PosList, True, True, True)
 		return {'FINISHED'}
 		
@@ -412,10 +421,10 @@ class PasteVisualBonePosButton(bpy.types.Operator):
 	bl_description = "Paste the visual position to selected pose bones"
 
 	def execute(self, context):		
-		Scene = bpy.context.scene
+		scene = bpy.context.scene
 		PosList = []
-		for co in Scene.CopiedBones:
-			PosList.append((co.name, co.location, co.rotation, co.scale))
+		for co in scene.CopiedBones:
+			PosList.append((co.elementName, co.location, co.rotation, co.scale))
 		SetVisualBonesPosPacked(bpy.context.active_object, bpy.context.selected_pose_bones, PosList, True, True, True)
 		return {'FINISHED'}
 		
@@ -426,13 +435,13 @@ class PasteVisualVertPosButton(bpy.types.Operator):
 	bl_description = "Paste the visual position to selected mesh vertex"
 
 	def execute(self, context):		
-		Scene = bpy.context.scene
+		scene = bpy.context.scene
 		PosList = []
 		obj = bpy.context.edit_object
 		me = obj.data
 		bm = bmesh.from_edit_mesh(me)
 		
-		for cb in Scene.CopiedVertex:
+		for cb in scene.CopiedVertex:
 			for vert in bm.verts:
 				if vert.select:
 					if vert.index == cb.id:
@@ -582,14 +591,7 @@ def SetVisualBonesPosPacked(obj, TargetBones, PositionList, UseLoc, UseRot, UseS
 
 
 def register():
-
-	bpy.utils.register_module(__name__)
-	bpy.types.Scene.my_prop = bpy.props.StringProperty(default="default value")
-
+    bpy.utils.register_module(__name__)
 
 def unregister():
-	bpy.utils.unregister_module(__name__)
-
-
-if __name__ == "__main__":
-	register()
+    bpy.utils.unregister_module(__name__)
