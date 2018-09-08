@@ -7,3 +7,8 @@ Initial release.
 
 Bone management with ChildOf constraint.
 Several bugs fixed.
+
+== Rev 0.1.2 ==
+
+Code updated for zip file
+Several bugs fixed.
