@@ -25,14 +25,17 @@ bl_info = {
 	'name': 'Copy Visual Position',
 	'description': "This addons Copy Visual Position allows to easily copy / paste the visual position of several elements in the scene like Objects, Bones or Vertex and other element in EditMod.",
 	'author': 'Loux Xavier (BleuRaven)',
-	'version': (0, 1, 2),
-	'blender': (2, 79, 0),
-	'location': 'View3D > Tool > Copy Visual Position',
+	'version': (0, 1, 4),
+	'blender': (2, 80, 0),
+	'location': 'View3D > UI > Copy Visual Position',
 	'warning': '',
-	"wiki_url": "https://wiki.blender.org/index.php/Extensions:2.6/Py/Scripts/3D_interaction/Copy_Visual_Position",
+	"wiki_url": "https://github.com/xavier150/Copy-Visual-Position",
 	'tracker_url': '',
 	'support': 'COMMUNITY',
 	'category': '3D_interaction'}
+	
+	
+
 
 import bpy
 import bmesh
@@ -52,7 +55,7 @@ from bpy.props import (
 
 ########################### [UI (One by one)] ###########################
 
-class VisualPoseOneByOne(bpy.types.Panel): #Is Export panel
+class CVP_PT_VisualPoseOneByOne(bpy.types.Panel): #Is Export panel
 	bpy.types.Scene.LastVisualLocation = FloatVectorProperty(
 		name = "VisualLocation",
 		description	 = "",
@@ -77,10 +80,10 @@ class VisualPoseOneByOne(bpy.types.Panel): #Is Export panel
 		size=3
 		)
 	
-	bl_idname = "panel.visualposeonebyone"
+	bl_idname = "CVP_PT_VisualPoseOneByOne"
 	bl_label = "One by one"
 	bl_space_type = "VIEW_3D"
-	bl_region_type = "TOOLS"
+	bl_region_type = "UI"
 	bl_category = "Copy visual position"
 	
 	def draw(self, context):
@@ -93,24 +96,24 @@ class VisualPoseOneByOne(bpy.types.Panel): #Is Export panel
 		value.prop(scn, 'LastVisualScale')
 
 		text = layout.row()
-		text.label("Copy visual position from active", icon='COPYDOWN')
-		text.label("Paste visual position to active", icon='PASTEDOWN')
+		text.label( text="Copy visual position from active", icon='COPYDOWN')
+		text.label( text="Paste visual position to active", icon='PASTEDOWN')
 		Buttons = layout.row(align=True).column()
 		Button_loc = Buttons.row()
 		Button_rot = Buttons.row()
 		Button_scale = Buttons.row()
 		Button_all = Buttons.row()
 		
-		Button_loc.operator("object.copy_visual_location", icon='MAN_TRANS')
-		Button_rot.operator("object.copy_visual_rotation", icon='MAN_ROT')
-		Button_scale.operator("object.copy_scale", icon='MAN_SCALE')
-		Button_all.operator("object.copy_visual_all", icon='MANIPUL')
+		Button_loc.operator("object.copy_visual_location", icon='ORIENTATION_VIEW')
+		Button_rot.operator("object.copy_visual_rotation", icon='ORIENTATION_LOCAL')
+		Button_scale.operator("object.copy_scale", icon='ORIENTATION_NORMAL')
+		Button_all.operator("object.copy_visual_all", icon='URL')
 		
 		
-		Button_loc.operator("object.paste_visual_location", icon='MAN_TRANS')
-		Button_rot.operator("object.paste_visual_rotation", icon='MAN_ROT')
-		Button_scale.operator("object.paste_scale", icon='MAN_SCALE')
-		Button_all.operator("object.paste_visual_all", icon='MANIPUL')
+		Button_loc.operator("object.paste_visual_location", icon='ORIENTATION_VIEW')
+		Button_rot.operator("object.paste_visual_rotation", icon='ORIENTATION_LOCAL')
+		Button_scale.operator("object.paste_scale", icon='ORIENTATION_NORMAL')
+		Button_all.operator("object.paste_visual_all", icon='URL')
 		
 		if bpy.context.active_object is None:
 			Buttons.enabled = False
@@ -126,7 +129,7 @@ class VisualPoseOneByOne(bpy.types.Panel): #Is Export panel
 
 ########################### [Buttons (One by one) ] ###########################
 
-class CopyVisualObjLocButton(bpy.types.Operator):
+class CVP_OT_CopyVisualObjLocButton(bpy.types.Operator):
 	bl_label = "Copy loc"
 	bl_idname = "object.copy_visual_location"
 	bl_description = "Contpy the visual location of the active object"
@@ -135,7 +138,7 @@ class CopyVisualObjLocButton(bpy.types.Operator):
 		scene = bpy.context.scene
 		obj = bpy.context.active_object
 		if bpy.context.object.mode == "OBJECT":
-			scene.LastVisualLocation = obj.matrix_world * (obj.location * 0)
+			scene.LastVisualLocation = obj.matrix_world @ (obj.location * 0)
 		if bpy.context.object.mode == "POSE":
 			scene.LastVisualLocation = GetVisualBonePos(bpy.context.active_object, bpy.context.active_pose_bone)[0]
 		if bpy.context.object.mode == "EDIT":
@@ -143,7 +146,7 @@ class CopyVisualObjLocButton(bpy.types.Operator):
 		return {'FINISHED'}
 		
 		
-class CopyVisualObjRotButton(bpy.types.Operator):
+class CVP_OT_CopyVisualObjRotButton(bpy.types.Operator):
 	bl_label = "Copy rot"
 	bl_idname = "object.copy_visual_rotation"
 	bl_description = "Copy the visual rotation of the active object"
@@ -158,7 +161,7 @@ class CopyVisualObjRotButton(bpy.types.Operator):
 		return {'FINISHED'}
 		
 		
-class CopyObjScaleButton(bpy.types.Operator):
+class CVP_OT_CopyObjScaleButton(bpy.types.Operator):
 	bl_label = "Copy scale"
 	bl_idname = "object.copy_scale"
 	bl_description = "Copy the scale of the active object"
@@ -173,7 +176,7 @@ class CopyObjScaleButton(bpy.types.Operator):
 		return {'FINISHED'}
 
 		
-class CopyVisualObjPosButton(bpy.types.Operator):
+class CVP_OT_CopyVisualObjPosButton(bpy.types.Operator):
 	bl_label = "Copy all"
 	bl_idname = "object.copy_visual_all"
 	bl_description = "Copy the visual position of the active object"
@@ -182,7 +185,7 @@ class CopyVisualObjPosButton(bpy.types.Operator):
 		scene = bpy.context.scene
 		obj = bpy.context.active_object
 		if bpy.context.object.mode == "OBJECT":
-			scene.LastVisualLocation = obj.matrix_world * (obj.location * 0)
+			scene.LastVisualLocation = obj.matrix_world @ (obj.location * 0)
 			scene.LastVisualRotation = obj.matrix_world.to_euler()
 			scene.LastVisualScale =  obj.scale
 		if bpy.context.object.mode == "POSE":
@@ -193,7 +196,7 @@ class CopyVisualObjPosButton(bpy.types.Operator):
 		return {'FINISHED'}
 
 		
-class PasteVisualObjLocButton(bpy.types.Operator):
+class CVP_OT_PasteVisualObjLocButton(bpy.types.Operator):
 	bl_label = "Paste loc"
 	bl_idname = "object.paste_visual_location"
 	bl_description = "Paste the visual location to active object"
@@ -212,7 +215,7 @@ class PasteVisualObjLocButton(bpy.types.Operator):
 		return {'FINISHED'}
 		
 		
-class PasteVisualObjRotButton(bpy.types.Operator):
+class CVP_OT_PasteVisualObjRotButton(bpy.types.Operator):
 	bl_label = "Paste rot"
 	bl_idname = "object.paste_visual_rotation"
 	bl_description = "Paste the visual rotation to active object"
@@ -231,7 +234,7 @@ class PasteVisualObjRotButton(bpy.types.Operator):
 		return {'FINISHED'}
 		
 		
-class PasteObjScaleButton(bpy.types.Operator):
+class CVP_OT_PasteObjScaleButton(bpy.types.Operator):
 	bl_label = "Paste scale"
 	bl_idname = "object.paste_scale"
 	bl_description = "Paste the scale to active object"
@@ -250,7 +253,7 @@ class PasteObjScaleButton(bpy.types.Operator):
 		return {'FINISHED'}
 		
 		
-class PasteVisualObjPosButton(bpy.types.Operator):
+class CVP_OT_PasteVisualObjPosButton(bpy.types.Operator):
 	bl_label = "Paste all"
 	bl_idname = "object.paste_visual_all"
 	bl_description = "Paste the visual position to active object"
@@ -270,13 +273,13 @@ class PasteVisualObjPosButton(bpy.types.Operator):
 
 ########################### [UI (Packed)] ###########################
 
-class VisualPosePacked(bpy.types.Panel): #Is Export panel
+class CVP_PT_VisualPosePacked(bpy.types.Panel): #Is Export panel
 
 	class SaveCopyPosition(bpy.types.PropertyGroup):
-		elementName = StringProperty(default="Unknown")
-		location = FloatVectorProperty()
-		rotation = FloatVectorProperty()
-		scale = FloatVectorProperty()
+		elementName : StringProperty(default="Unknown")
+		location : FloatVectorProperty()
+		rotation : FloatVectorProperty()
+		scale : FloatVectorProperty()
 	
 	bpy.utils.register_class(SaveCopyPosition)
 	bpy.types.Scene.CopiedObjects = CollectionProperty(
@@ -288,18 +291,18 @@ class VisualPosePacked(bpy.types.Panel): #Is Export panel
 		)
 	
 	class SaveCopyVertLoc(bpy.types.PropertyGroup):
-		id = IntProperty(name="Index")
-		location = FloatVectorProperty(name="location")
+		id : IntProperty(name="Index")
+		location : FloatVectorProperty(name="location")
 	bpy.utils.register_class(SaveCopyVertLoc)
 			
 	bpy.types.Scene.CopiedVertex = CollectionProperty(
 		type=SaveCopyVertLoc
 		)
 	
-	bl_idname = "panel.visualposepacked"
+	bl_idname = "CVP_PT_VisualPosePacked"
 	bl_label = "Packed"
 	bl_space_type = "VIEW_3D"
-	bl_region_type = "TOOLS"
+	bl_region_type = "UI"
 	bl_category = "Copy visual position"
 	
 	def draw(self, context):
@@ -307,8 +310,8 @@ class VisualPosePacked(bpy.types.Panel): #Is Export panel
 		layout = self.layout		
 
 		text = layout.row()
-		text.label("Copy visual positions from select", icon='COPYDOWN')
-		text.label("Paste visual positions to select", icon='PASTEDOWN')
+		text.label( text="Copy visual positions from select", icon='COPYDOWN')
+		text.label( text="Paste visual positions to select", icon='PASTEDOWN')
 		Buttons = layout.row(align=True).column()
 		Button_objs = Buttons.row()
 		Button_bones = Buttons.row()
@@ -324,14 +327,15 @@ class VisualPosePacked(bpy.types.Panel): #Is Export panel
 		Button_vertex.operator("object.paste_pack_visual_vertex", icon='EDITMODE_HLT')
 		
 		if bpy.context.object is not None:
-			if bpy.context.object.mode != "OBJECT":
-				Button_objs.enabled = False
-			if bpy.context.object.mode != "POSE":
-				Button_bones.enabled = False
-			if bpy.context.object.mode != "EDIT":
-				Button_vertex.enabled = False
-			if bpy.context.active_object.type != "MESH":
-				Button_vertex.enabled = False
+			if bpy.context.active_object is not None:
+				if bpy.context.object.mode != "OBJECT":
+					Button_objs.enabled = False
+				if bpy.context.object.mode != "POSE":
+					Button_bones.enabled = False
+				if bpy.context.object.mode != "EDIT":
+					Button_vertex.enabled = False
+				if bpy.context.active_object.type != "MESH":
+					Button_vertex.enabled = False
 		else:
 			Button_objs.enabled = False
 			Button_bones.enabled = False
@@ -339,7 +343,7 @@ class VisualPosePacked(bpy.types.Panel): #Is Export panel
 		
 ########################### [Buttons (Packed) ] ###########################
 
-class CopyVisualObjPosButton(bpy.types.Operator):
+class CVP_OT_CopyVisualObjsPosButton(bpy.types.Operator):
 	bl_label = "Copy objs"
 	bl_idname = "object.copy_pack_visual_objs"
 	bl_description = "Contpy the visual position from selected objects"
@@ -357,7 +361,7 @@ class CopyVisualObjPosButton(bpy.types.Operator):
 		return {'FINISHED'}
 		
 		
-class CopyVisualBonePosButton(bpy.types.Operator):
+class CVP_OT_CopyVisualBonesPosButton(bpy.types.Operator):
 	bl_label = "Copy bones"
 	bl_idname = "object.copy_pack_visual_bones"
 	bl_description = "Contpy the visual position from selected pose bones"
@@ -375,7 +379,7 @@ class CopyVisualBonePosButton(bpy.types.Operator):
 		return {'FINISHED'}
 		
 		
-class CopyVisualVertPosButton(bpy.types.Operator):
+class CVP_OT_CopyVisualVertsPosButton(bpy.types.Operator):
 	bl_label = "Copy vertex"
 	bl_idname = "object.copy_pack_visual_vertex"
 	bl_description = "Contpy the visual position from selected mesh vertex"
@@ -401,7 +405,7 @@ class CopyVisualVertPosButton(bpy.types.Operator):
 		return {'FINISHED'}
 			
 			
-class PasteVisualObjPosButton(bpy.types.Operator):
+class CVP_OT_PasteVisualObjsPosButton(bpy.types.Operator):
 	bl_label = "Paste objs"
 	bl_idname = "object.paste_pack_visual_objs"
 	bl_description = "Paste the visual position to selected objects"
@@ -415,7 +419,7 @@ class PasteVisualObjPosButton(bpy.types.Operator):
 		return {'FINISHED'}
 		
 		
-class PasteVisualBonePosButton(bpy.types.Operator):
+class CVP_OT_PasteVisualBonesPosButton(bpy.types.Operator):
 	bl_label = "Paste bones"
 	bl_idname = "object.paste_pack_visual_bones"
 	bl_description = "Paste the visual position to selected pose bones"
@@ -429,7 +433,7 @@ class PasteVisualBonePosButton(bpy.types.Operator):
 		return {'FINISHED'}
 		
 		
-class PasteVisualVertPosButton(bpy.types.Operator):
+class CVP_OT_PasteVisualVertsPosButton(bpy.types.Operator):
 	bl_label = "Paste vertex"
 	bl_idname = "object.paste_pack_visual_vertex"
 	bl_description = "Paste the visual position to selected mesh vertex"
@@ -460,7 +464,7 @@ def ApplyRealMatrixWorldObj(obj, matrix):
 				if cons.target is not None:
 					Child = cons.inverse_matrix
 					par = cons.target.matrix_world
-					obj.matrix_world = Child.inverted()*par.inverted()*matrix
+					obj.matrix_world = Child.inverted() @ par.inverted() @ matrix
 					return
 	obj.matrix_world = matrix
 	
@@ -471,12 +475,12 @@ def ApplyRealMatrixWorldBones(bone, obj, matrix):
 				if cons.target is not None:
 					Child = cons.inverse_matrix
 					if cons.target.type == "ARMATURE":
-						par = obj.matrix_world * obj.pose.bones[cons.subtarget].matrix
+						par = obj.matrix_world @ obj.pose.bones[cons.subtarget].matrix
 					else:
 						par = cons.target.matrix_world
-					bone.matrix = obj.matrix_world.inverted() * (Child.inverted()*par.inverted()*matrix)
+					bone.matrix = obj.matrix_world.inverted() @ (Child.inverted() @ par.inverted() @ matrix)
 					return
-	bone.matrix = obj.matrix_world.inverted() * matrix
+	bone.matrix = obj.matrix_world.inverted() @ matrix
 	
 def FindItemInListByName(item, list):
 	for TargetItem in list:
@@ -492,7 +496,7 @@ def SetVisualObjPos(obj, loc, rot, scale, UseLoc, UseRot, UseScale):
 	#ApplyPos
 	mat_loc = Matrix.Translation(loc)
 	mat_rot = rot.to_matrix().to_4x4()
-	matrix = mat_loc * mat_rot
+	matrix = mat_loc @ mat_rot
 	ApplyRealMatrixWorldObj(obj, matrix)
 	obj.scale = scale
 	#ResetNotDesiredValue
@@ -505,24 +509,24 @@ def SetVisualObjPos(obj, loc, rot, scale, UseLoc, UseRot, UseScale):
 		
 def GetVisualVertLoc(obj):
 	#Save
-	BaseLoc = copy.deepcopy(bpy.context.space_data.cursor_location)
+	BaseLoc = copy.deepcopy(bpy.context.scene.cursor.location)
 	#ApplyPos
 	bpy.ops.view3d.snap_cursor_to_selected()
-	loc = copy.deepcopy(bpy.context.space_data.cursor_location)
-	bpy.context.space_data.cursor_location = BaseLoc
+	loc = copy.deepcopy(bpy.context.scene.cursor.location)
+	bpy.context.scene.cursor.location = BaseLoc
 	return(loc)
 
 def SetVisualVertLoc(obj, loc):
 	#Save
-	BaseLoc = copy.deepcopy(bpy.context.space_data.cursor_location)
+	BaseLoc = copy.deepcopy(bpy.context.scene.cursor.location)
 	#ApplyPos
-	bpy.context.space_data.cursor_location = loc
+	bpy.context.scene.cursor.location = loc
 	bpy.ops.view3d.snap_selected_to_cursor(use_offset=True)
-	bpy.context.space_data.cursor_location = BaseLoc
+	bpy.context.scene.cursor.location = BaseLoc
 
 def GetVisualBonePos(obj, Bone):
-	matrix_Pose = obj.matrix_world * Bone.matrix
-	loc = matrix_Pose * Vector((0,0,0))
+	matrix_Pose = obj.matrix_world @ Bone.matrix
+	loc = matrix_Pose @ Vector((0,0,0))
 	rot = matrix_Pose.to_euler()
 	scale = Bone.scale
 	return((loc, rot, scale))
@@ -537,7 +541,7 @@ def SetVisualBonePos(obj, Bone, loc, rot, scale, UseLoc, UseRot, UseScale):
 	#ApplyPos	
 	mat_loc = Matrix.Translation(loc)
 	mat_rot = rot.to_matrix().to_4x4()
-	matrix = mat_loc * mat_rot
+	matrix = mat_loc @ mat_rot
 	ApplyRealMatrixWorldBones(Bone, obj, matrix)
 	Bone.scale = scale
 	#ResetNotDesiredValue
@@ -552,7 +556,7 @@ def SetVisualBonePos(obj, Bone, loc, rot, scale, UseLoc, UseRot, UseScale):
 def GetVisualObjsPosPacked(TargetObjs):
 	PositionList = []
 	for obj in TargetObjs:
-		loc = obj.matrix_world * (obj.location * 0)
+		loc = obj.matrix_world @ (obj.location * 0)
 		rot = obj.matrix_world.to_euler()
 		scale = obj.scale
 		PositionList.append((obj.name, loc, rot, scale))
@@ -590,8 +594,30 @@ def SetVisualBonesPosPacked(obj, TargetBones, PositionList, UseLoc, UseRot, UseS
 #############################[...]#############################
 
 
-def register():
-    bpy.utils.register_module(__name__)
 
-def unregister():
-    bpy.utils.unregister_module(__name__)
+classes = (
+
+	CVP_OT_CopyVisualObjLocButton,
+	CVP_OT_CopyVisualObjRotButton,
+	CVP_OT_CopyObjScaleButton,
+	CVP_OT_CopyVisualObjPosButton,
+	CVP_OT_PasteVisualObjLocButton,
+	CVP_OT_PasteVisualObjRotButton,
+	CVP_OT_PasteObjScaleButton,
+	CVP_OT_PasteVisualObjPosButton,
+	
+	CVP_PT_VisualPoseOneByOne,
+	
+	CVP_OT_CopyVisualObjsPosButton,
+	CVP_OT_CopyVisualBonesPosButton,
+	CVP_OT_CopyVisualVertsPosButton,
+	CVP_OT_PasteVisualObjsPosButton,
+	CVP_OT_PasteVisualBonesPosButton,
+	CVP_OT_PasteVisualVertsPosButton,
+	
+	CVP_PT_VisualPosePacked,
+	#CVP_PT_VisualPosePacked.SaveCopyPosition,
+	#CVP_PT_VisualPosePacked.SaveCopyVertLoc,
+)
+
+register, unregister = bpy.utils.register_classes_factory(classes)
