@@ -12,3 +12,11 @@ Several bugs fixed.
 
 Code updated for zip file
 Several bugs fixed.
+
+== Rev 0.1.3 ==
+
+Fixed: Problem if the Euler is not the same
+
+== Rev 0.1.4 ==
+
+Updated for Blender 2.8
