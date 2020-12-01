@@ -25,16 +25,15 @@ bl_info = {
 	'name': 'Copy Visual Position',
 	'description': "This addons Copy Visual Position allows to easily copy / paste the visual position of several elements in the scene like Objects, Bones or Vertex and other element in EditMod.",
 	'author': 'Loux Xavier (BleuRaven)',
-	'version': (0, 1, 4),
-	'blender': (2, 80, 0),
+	'version': (0, 1, 5),
+	'blender': (2, 90, 0),
 	'location': 'View3D > UI > Copy Visual Position',
 	'warning': '',
 	"wiki_url": "https://github.com/xavier150/Copy-Visual-Position",
 	'tracker_url': '',
 	'support': 'COMMUNITY',
 	'category': '3D_interaction'}
-	
-	
+
 
 
 import bpy
@@ -536,7 +535,8 @@ def SetVisualBonePos(obj, Bone, loc, rot, scale, UseLoc, UseRot, UseScale):
 	BaseLoc = copy.deepcopy(Bone.location)
 	BaseScale = copy.deepcopy(Bone.scale)
 	RotModeBase = copy.deepcopy(Bone.rotation_mode)
-	Bone.rotation_mode = 'XYZ'
+	Bone.rotation_mode = Bone.rotation_mode
+	#Bone.rotation_mode = 'XYZ'
 	BaseRot = copy.deepcopy(Bone.rotation_euler)
 	#ApplyPos	
 	mat_loc = Matrix.Translation(loc)

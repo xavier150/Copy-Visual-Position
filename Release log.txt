@@ -20,3 +20,7 @@ Fixed: Problem if the Euler is not the same
 == Rev 0.1.4 ==
 
 Updated for Blender 2.8
+
+== Rev 0.1.5 ==
+- Some fix
+- Update fro Blender 2.9
