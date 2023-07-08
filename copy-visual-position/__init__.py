@@ -545,8 +545,7 @@ def SetVisualBonePos(obj, Bone, loc, rot, scale, UseLoc, UseRot, UseScale):
     BaseLoc = copy.deepcopy(Bone.location)
     BaseScale = copy.deepcopy(Bone.scale)
     RotModeBase = copy.deepcopy(Bone.rotation_mode)
-    Bone.rotation_mode = Bone.rotation_mode
-    # Bone.rotation_mode = 'XYZ'
+    #Bone.rotation_mode = Bone.rotation_mode  # Need update for proxy
     BaseRot = copy.deepcopy(Bone.rotation_euler)
     # ApplyPos
     mat_loc = Matrix.Translation(loc)
@@ -561,7 +560,7 @@ def SetVisualBonePos(obj, Bone, loc, rot, scale, UseLoc, UseRot, UseScale):
         Bone.rotation_euler = BaseRot
     if not UseScale:
         Bone.scale = BaseScale
-    Bone.rotation_mode = RotModeBase
+    #Bone.rotation_mode = RotModeBase  # Need update for proxy
 
 
 def GetVisualObjsPosPacked(TargetObjs):
