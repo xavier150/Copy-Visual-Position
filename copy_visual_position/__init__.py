@@ -37,18 +37,7 @@ from bpy.props import (
         )
 
 
-bl_info = {
-    'name': 'Copy Visual Position',
-    'description': "This addons Copy Visual Position allows to easily copy / paste the visual position of several elements in the scene like Objects, Bones or Vertex and other element in EditMod.",
-    'author': 'Loux Xavier (BleuRaven)',
-    'version': (0, 1, 5),
-    'blender': (2, 90, 0),
-    'location': 'View3D > UI > Copy Visual Position',
-    'warning': '',
-    "wiki_url": "https://github.com/xavier150/Copy-Visual-Position",
-    'tracker_url': '',
-    'support': 'COMMUNITY',
-    'category': '3D_interaction'}
+bl_info = {}
 
 
 # ########################## [UI (One by one)] ###########################

@@ -1,0 +1,41 @@
+{
+    "schema_version": [1, 0, 0],
+    "blender_manifest": {
+        "id": "copy_visual_position",
+        "version": [1, 0, 0],
+        "name": "Copy Visual Position",
+        "tagline": "Easily copy/paste the visual position of various elements",
+        "maintainer": "Loux Xavier (BleuRaven) xavierloux.loux@gmail.com",
+
+        "website_url": "https://github.com/xavier150/Copy-Visual-Position",
+        "report_issue_url": "",
+        "support": "COMMUNITY",
+
+        "type": "add-on",
+        "tags": ["All"],
+        "category": "All",
+        "license": ["SPDX:GPL-3.0-or-later"],
+        
+        "copyright": [
+            "2024 Xavier Loux",
+            "2013 Blender Foundation"
+        ],
+                
+        "permissions": {
+            "clipboard": "Copy and paste visual position of objects, bones, or vertices"
+        }
+    },
+
+    "builds": {
+        "bleuraven_anim_tools": 
+        {
+            "generate_method": "EXTENTION_COMMAND",
+            "auto_install_range": [[4,2,0], [4,3,0]],
+            "naming": "{Name}-{Version}.zip",
+            "module": "copy_visual_position", 
+            "pkg_id": "copy_visual_position", 
+            "exclude_paths": [],
+            "blender_version_min": [4,2,0]
+        }
+    }
+}
