@@ -126,21 +126,4 @@ def SetVisualBonePos(obj, Bone, loc, rot, scale, UseLoc, UseRot, UseScale):
         Bone.scale = BaseScale
     #Bone.rotation_mode = RotModeBase  # Need update for proxy
 
-def GetVisualBonesPosPacked(obj, TargetBones):
-    PositionList = []
-    for bone in TargetBones:
-        loc = GetVisualBonePos(obj, bone)[0]
-        rot = GetVisualBonePos(obj, bone)[1]
-        scale = GetVisualBonePos(obj, bone)[2]
-        PositionList.append((bone.name, loc, rot, scale))
-    return PositionList
 
-
-def SetVisualBonesPosPacked(obj, TargetBones, PositionList, UseLoc, UseRot, UseScale):
-    for pl in PositionList:
-        TargetBone = FindItemInListByName(pl[0], TargetBones)
-        if TargetBone is not None:
-            loc = mathutils.Vector(pl[1])
-            rot = mathutils.Euler(pl[2], 'XYZ')
-            scale = mathutils.Vector(pl[3])
-            SetVisualBonePos(obj, TargetBone, loc, rot, scale, UseLoc, UseRot, UseScale)

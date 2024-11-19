@@ -23,6 +23,7 @@
 
 
 import bpy
+from . import cvp_packed_bones_utils
 
 class SaveCopyBonePosition(bpy.types.PropertyGroup):
     elementName: bpy.props.StringProperty(default="Unknown")
@@ -39,7 +40,7 @@ class CVP_OT_CopyVisualBonesPosButton(bpy.types.Operator):
     def execute(self, context):
         scene = bpy.context.scene
         scene.CopiedBones.clear()
-        PosList = GetVisualBonesPosPacked(bpy.context.active_object, bpy.context.selected_pose_bones)
+        PosList = cvp_packed_bones_utils.GetVisualBonesPosPacked(bpy.context.active_object, bpy.context.selected_pose_bones)
         for pos in PosList:
             PosProp = scene.CopiedBones.add()
             PosProp.elementName = pos[0]
@@ -58,7 +59,7 @@ class CVP_OT_PasteVisualBonesPosButton(bpy.types.Operator):
         PosList = []
         for co in scene.CopiedBones:
             PosList.append((co.elementName, co.location, co.rotation, co.scale))
-        SetVisualBonesPosPacked(bpy.context.active_object, bpy.context.selected_pose_bones, PosList, True, True, True)
+        cvp_packed_bones_utils.SetVisualBonesPosPacked(bpy.context.active_object, bpy.context.selected_pose_bones, PosList, True, True, True)
         return {'FINISHED'}
 
 

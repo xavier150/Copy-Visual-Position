@@ -60,7 +60,7 @@ class CVP_OT_PasteVisualObjsPosButton(bpy.types.Operator):
         PosList = []
         for co in scene.CopiedObjects:
             PosList.append((co.elementName, co.location, co.rotation, co.scale))
-        cvp_utils.SetVisualObjsPosPacked(bpy.context.selected_objects, PosList, True, True, True)
+        cvp_packed_objs_utils.SetVisualObjsPosPacked(bpy.context.selected_objects, PosList, True, True, True)
         return {'FINISHED'}
 
 classes = (
