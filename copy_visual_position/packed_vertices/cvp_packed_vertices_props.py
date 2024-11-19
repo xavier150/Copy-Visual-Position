@@ -47,7 +47,6 @@ class CVP_OT_CopyVisualVertsPosButton(bpy.types.Operator):
                 # v.co.x = 0
                 ref = vert.index
                 PosList.append((ref, vert.co))
-                print(ref)
         for pos in PosList:
             id = pos[0]
             prop = scene.CopiedVertex.add()
@@ -72,7 +71,6 @@ class CVP_OT_PasteVisualVertsPosButton(bpy.types.Operator):
                 if vert.select:
                     if vert.index == cb.id:
                         vert.co = cb.location
-                        print("VertMove")
         bmesh.update_edit_mesh(me)
         me.update()
         return {'FINISHED'}
