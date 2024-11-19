@@ -1,4 +1,4 @@
-# Copy-Visual-Position
+# Copy Visual Position
 The addon **Copy Visual Position** allows you to easily copy/paste the visual position of several elements in the scene, such as Objects, Bones, or Vertices, to another element in Edit Mode.
 
 ![image](https://github.com/user-attachments/assets/344d17d1-20a9-4c60-9642-de8b20fd1361)
