@@ -63,7 +63,9 @@ def generate_new_manifest(addon_generate_config_data, target_build_name):
     data["blender_version_min"] = utils.get_str_version(build_data["blender_version_min"])
     data["license"] = manifest_data["license"]
     data["copyright"] = manifest_data["copyright"]
-    data["permissions"] = manifest_data["permissions"]
+    
+    if len(manifest_data["permissions"]) > 0:
+        data["permissions"] = manifest_data["permissions"]
     return data
 
 def dump_list(v):
