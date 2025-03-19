@@ -30,7 +30,7 @@
         "bleuraven_anim_tools": 
         {
             "generate_method": "EXTENTION_COMMAND",
-            "auto_install_range": [[4,2,0], [4,3,0]],
+            "auto_install_range": [[4,2,0], "LATEST"],
             "naming": "{Name}-{Version}.zip",
             "module": "copy_visual_position", 
             "pkg_id": "copy_visual_position", 
