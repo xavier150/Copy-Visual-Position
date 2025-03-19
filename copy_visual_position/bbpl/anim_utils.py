@@ -24,12 +24,13 @@
 
 import bpy
 import mathutils
+from typing import List
 from . import scene_utils
 from . import utils
 
 
 class NLA_Save:
-    def __init__(self, nla_tracks):
+    def __init__(self, nla_tracks: bpy.types.NlaTracks):
         """
         Initializes the NLA_Save object.
 
@@ -43,7 +44,7 @@ class NLA_Save:
         if nla_tracks is not None:
             self.save_tracks(nla_tracks)
 
-    def save_tracks(self, nla_tracks):
+    def save_tracks(self, nla_tracks: bpy.types.NlaTracks):
         """
         Saves the NLA tracks.
 
@@ -59,7 +60,7 @@ class NLA_Save:
             proxy_nla_tracks.append(ProxyCopy_NLATrack(nla_track))
         self.nla_tracks_save = proxy_nla_tracks
 
-    def apply_save_on_target(self, target):
+    def apply_save_on_target(self, target: bpy.types.Object):
         """
         Applies the saved NLA tracks to the target object.
 
@@ -83,7 +84,7 @@ class ProxyCopy_NLATrack:
     It is used to safely copy the bpy.types.NlaTrack struct.
     """
 
-    def __init__(self, nla_track):
+    def __init__(self, nla_track: bpy.types.NlaTrack):
         """
         Initializes the ProxyCopy_NLATrack object.
 
@@ -104,7 +105,7 @@ class ProxyCopy_NLATrack:
             for strip in nla_track.strips:
                 self.strips.append(ProxyCopy_NlaStrip(strip))
 
-    def paste_data_on(self, nla_track):
+    def paste_data_on(self, nla_track: bpy.types.NlaTrack):
         """
         Pastes the saved data onto the target NlaTrack.
 
@@ -143,7 +144,7 @@ class ProxyCopy_NlaStrip:
         self.blend_out = nla_strip.blend_out
         self.blend_type = nla_strip.blend_type
         self.extrapolation = nla_strip.extrapolation
-        self.fcurves = []
+        self.fcurves: List[ProxyCopy_StripFCurve] = []
         # Since 3.5 interact to a NlaStripFCurves not linked to an object produce Blender Crash.
         for fcurve in nla_strip.fcurves:
             self.fcurves.append(ProxyCopy_StripFCurve(fcurve))
@@ -172,16 +173,45 @@ class ProxyCopy_NlaStrip:
             self.use_sync_length = nla_strip.use_sync_length
 
     def paste_data_on(self, nla_strip: bpy.types.NlaStrip):
-        # nla_strip.action = strip.action
-        nla_strip.action_frame_end = self.action_frame_end
-        nla_strip.action_frame_start = self.action_frame_start
-        # nla_strip.active = self.active
+
+        # influence and animated influence need to be set before all.
+        nla_strip.influence = 0.5
+        
+        # I don't know why but when I set use_animated_influence or influence 
+        # it automaticaly add a key in the curve...
+        # This is why I override and not do a simple paste
+        nla_strip.use_animated_influence = self.use_animated_influence
+        for fcurve in self.fcurves:
+            fcurve.paste_data_on(nla_strip, override=True)
+
+        # Auto Blend need to be set before the Blend values.
+        if bpy.app.version >= (3, 0, 0):
+            nla_strip.use_auto_blend = self.use_auto_blend
         nla_strip.blend_in = self.blend_in
         nla_strip.blend_out = self.blend_out
         nla_strip.blend_type = self.blend_type
+
+        # Strip Time
+        if bpy.app.version >= (3, 0, 0):
+            nla_strip.use_animated_time = self.use_animated_time
+        nla_strip.strip_time = self.strip_time
+
+        # Playback
+        if bpy.app.version >= (3, 0, 0):
+            nla_strip.use_animated_time_cyclic = self.use_animated_time_cyclic
+            nla_strip.use_reverse = self.use_reverse
+
+        # Action Clip
+        if bpy.app.version >= (3, 0, 0):
+            nla_strip.use_sync_length = self.use_sync_length
+        # nla_strip.action = strip.action
+        nla_strip.action_frame_end = self.action_frame_end
+        nla_strip.action_frame_start = self.action_frame_start
+        nla_strip.repeat = self.repeat
+        nla_strip.scale = self.scale
+
+        # nla_strip.active = self.active
         nla_strip.extrapolation = self.extrapolation
-        for fcurve in self.fcurves:
-            fcurve.paste_data_on(nla_strip)
         nla_strip.frame_end = self.frame_end
         if bpy.app.version >= (3, 3, 0):
             nla_strip.frame_end_ui = self.frame_end_ui
@@ -192,19 +222,11 @@ class ProxyCopy_NlaStrip:
         # nla_strip.modifiers = self.modifiers #TO DO
         nla_strip.mute = self.mute
         # nla_strip.name = self.name
-        nla_strip.repeat = self.repeat
-        nla_strip.scale = self.scale
+
         nla_strip.select = self.select
-        nla_strip.strip_time = self.strip_time
+
         # nla_strip.strips = self.strips #TO DO
         # nla_strip.type = self.type  # Read only
-        nla_strip.use_animated_influence = self.use_animated_influence
-        if bpy.app.version >= (3, 0, 0):
-            nla_strip.use_animated_time = self.use_animated_time
-            nla_strip.use_animated_time_cyclic = self.use_animated_time_cyclic
-            nla_strip.use_auto_blend = self.use_auto_blend
-            nla_strip.use_reverse = self.use_reverse
-            nla_strip.use_sync_length = self.use_sync_length
 
 
 class ProxyCopy_StripFCurve():
@@ -216,19 +238,25 @@ class ProxyCopy_StripFCurve():
 
     def __init__(self, fcurve: bpy.types.NlaStripFCurves):
         self.data_path = fcurve.data_path
-        self.keyframe_points = []
+        self.keyframe_points: List[ProxyCopy_Keyframe] = []
         for keyframe_point in fcurve.keyframe_points:
             self.keyframe_points.append(ProxyCopy_Keyframe(keyframe_point))
 
-    def paste_data_on(self, strips: bpy.types.NlaStrips):
-        if self.data_path == "influence":
-            # Create the curve with use_animated_influence
-            strips.use_animated_influence = True 
+    def print_stored_keys(self):
+        for key in self.keyframe_points:
+            key.print_stored_key()
 
-            for key in self.keyframe_points:
-                strips.influence = key.co[1]
-                strips.keyframe_insert(data_path="influence", frame=key.co[0], keytype=key.type)
 
+    def paste_data_on(self, strips: bpy.types.NlaStrip, override=False):
+        #Found the corrected curve
+        for fcurve in strips.fcurves:
+            if self.data_path == "influence" and fcurve.data_path == "influence":
+                if override == True:
+                    fcurve.keyframe_points.clear()
+                # Create the curve with use_animated_influence
+                for key in self.keyframe_points:
+                    new_key = fcurve.keyframe_points.insert(frame=key.co[0], value=key.co[1], keyframe_type=key.type)
+                    key.paste_data_on(new_key)
 
 
 class ProxyCopy_FCurve():
@@ -240,31 +268,52 @@ class ProxyCopy_FCurve():
 
     def __init__(self, fcurve: bpy.types.FCurve):
         self.data_path = fcurve.data_path
-        self.keyframe_points = []
+        self.keyframe_points: List[ProxyCopy_Keyframe] = []
         for keyframe_point in fcurve.keyframe_points:
             self.keyframe_points.append(ProxyCopy_Keyframe(keyframe_point))
 
     def paste_data_on(self, fcurve: bpy.types.FCurve):
         fcurve.data_path = self.data_path
-        for keyframe_point in self.keyframe_points:
-            pass
-            #TODO
+        for key in self.keyframe_points:
+            new_key = fcurve.keyframe_points.insert(frame=key.co[0], value=key.co[1], keyframe_type=key.type)
+            key.paste_data_on(new_key)
 
 
 class ProxyCopy_Keyframe():
     """
-    Proxy class for copying bpy.types.Keyframe. (NLA Strip only)
+    Proxy class for copying bpy.types.Keyframe.
 
     It is used to safely copy the bpy.types.Keyframe struct.
     """
 
     def __init__(self, keyframe: bpy.types.Keyframe):
-        self.co = keyframe.co
+        self.co = keyframe.co.copy()
         self.type = keyframe.type
+        self.interpolation = keyframe.interpolation
+        self.handle_left = keyframe.handle_left.copy()
+        self.handle_left_type = keyframe.handle_left_type
+        self.handle_right = keyframe.handle_right.copy()
+        self.handle_right_type = keyframe.handle_right_type
+        self.select_control_point = keyframe.select_control_point
+        self.select_left_handle = keyframe.select_left_handle
+        self.select_right_handle = keyframe.select_right_handle
+        
+
+    def print_stored_key(self):
+        print(self.co, self.type, self.interpolation)
 
     def paste_data_on(self, keyframe: bpy.types.Keyframe):
         keyframe.co = self.co
         keyframe.type = self.type
+        keyframe.interpolation = self.interpolation
+        keyframe.handle_left = self.handle_left
+        keyframe.handle_left_type = self.handle_left_type
+        keyframe.handle_right = self.handle_right
+        keyframe.handle_right_type = self.handle_right_type
+        keyframe.select_control_point = self.select_control_point
+        keyframe.select_left_handle = self.select_left_handle
+        keyframe.select_right_handle = self.select_right_handle
+
 
 
 
@@ -318,13 +367,6 @@ def copy_modifier_attr(a :bpy.types.FModifierGenerator, b :bpy.types.FModifierGe
     ]
     copy_attributes(a, b, priority_vars, ignore_list, print_fails)
 
-def copy_keyframepoints_attr(a :bpy.types.FCurveKeyframePoints, b :bpy.types.FCurveKeyframePoints, print_fails = True):
-    if not isinstance(a, bpy.types.FCurveKeyframePoints) or not isinstance(b, bpy.types.FCurveKeyframePoints):
-        raise TypeError(f"Expected 'bpy.types.FCurveKeyframePoints', but got {type(a).__name__} and {type(b).__name__}")
-    priority_vars = []
-    ignore_list = []
-    copy_attributes(a, b, priority_vars, ignore_list, print_fails)
-
 def copy_driver_attr(a: bpy.types.Driver, b: bpy.types.Driver, print_fails = True):
     if not isinstance(a, bpy.types.Driver) or not isinstance(b, bpy.types.Driver):
         raise TypeError(f"Expected 'bpy.types.Driver', but got {type(a).__name__} and {type(b).__name__}")
@@ -361,8 +403,6 @@ def copy_drivervariable_attr(a: bpy.types.DriverVariable, b: bpy.types.DriverVar
         "id_type",
     ]
     copy_attributes(a, b, priority_vars, ignore_list, print_fails)
-
-
 
 def copy_drivers(src: bpy.types.Object, dst: bpy.types.Object):
     print_fails = False
@@ -403,15 +443,9 @@ def copy_drivers(src: bpy.types.Object, dst: bpy.types.Object):
                     if v2.targets[i].id == src:
                         v2.targets[i].id = dst
 
-            # Copy key frames
-            try:
-                for i in range(len(d1.keyframe_points)):
-                    d2.keyframe_points.add()
-                    k1 = d1.keyframe_points[i]
-                    k2 = d2.keyframe_points[i]
-                    copy_keyframepoints_attr(k1, k2, print_fails)
-            except TypeError:
-                pass
+            # Copy keyframes
+            copy_fcurve = ProxyCopy_FCurve(d1)
+            copy_fcurve.paste_data_on(d2)
 
 
 class AnimationManagment():
@@ -427,7 +461,7 @@ class AnimationManagment():
         self.action_influence = 1.0
         self.nla_tracks_save = None
 
-    def save_animation_data(self, obj):
+    def save_animation_data(self, obj: bpy.types.Object):
         """
         Saves the animation data from the object.
 
@@ -444,7 +478,7 @@ class AnimationManagment():
         else:
             self.use_animation_data = False
 
-    def clear_animation_data(self, obj):
+    def clear_animation_data(self, obj: bpy.types.Object):
         """
         Clears the animation data from the object.
 
@@ -453,7 +487,7 @@ class AnimationManagment():
         """
         obj.animation_data_clear()
 
-    def set_animation_data(self, obj, copy_nla=False):
+    def set_animation_data(self, obj: bpy.types.Object, copy_nla=False):
         """
         Sets the animation data on the object.
 
@@ -487,7 +521,7 @@ class AnimationManagment():
         if save_it_tweakmode:
             scene_utils.enter_tweak_mode()
 
-def reset_armature_pose(obj):
+def reset_armature_pose(obj: bpy.types.Object):
     """
     Resets the pose of an armature object.
 

@@ -23,7 +23,7 @@
 # ----------------------------------------------
 
 import bpy
-from .. import __package__ as base_package
+from ... import __package__ as base_package
 
 def get_package_name():
     # Before 4.2 __package__ will look like that: 
@@ -63,17 +63,21 @@ def get_reduced_package_name():
     return reduced_name
 
 def get_operator_class_name(name):
-    package_name = get_reduced_package_name()
-    return f"BBPL_OT_{package_name}_{name}"
+    reduced_package_name = get_reduced_package_name()
+    return f"BBPL_OT_{reduced_package_name}_{name}"
 
 def get_data_operator_idname(name):
-    package_name = get_reduced_package_name()
-    return f"data.bbpl_{package_name}_{name}"
+    reduced_package_name = get_reduced_package_name()
+    return f"data.bbpl_{reduced_package_name}_{name}"
 
 def get_object_operator_idname(name):
-    package_name = get_reduced_package_name()
-    return f"object.bbpl_{package_name}_{name}"
+    reduced_package_name = get_reduced_package_name()
+    return f"object.bbpl_{reduced_package_name}_{name}"
 
 def get_scene_operator_idname(name):
-    package_name = get_reduced_package_name()
-    return f"scene.bbpl_{package_name}_{name}"
+    reduced_package_name = get_reduced_package_name()
+    return f"scene.bbpl_{reduced_package_name}_{name}"
+
+def get_layout_ui_class_name(name):
+    reduced_package_name = get_reduced_package_name()
+    return f"BBPL_UI_{reduced_package_name}_{name}"

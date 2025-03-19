@@ -53,12 +53,37 @@ def create_ui_accordion_class():
                 return prop_rna.name
 
 
-        def draw(self, layout: bpy.types.UILayout):
-            tria_icon = "TRIA_DOWN" if self.expend else "TRIA_RIGHT"
-            description = "Click to collapse" if self.expend else "Click to expand"
-            layout.row().prop(self, "expend", icon=tria_icon, icon_only=True, text=self.get_name(), emboss=False, toggle=True, expand=True)
-            if self.expend:
-                pass
+        def draw(self, layout: bpy.types.UILayout, text = None):
+            """Similar to layout.panel_prop(...) Use panel_prop() in Blender 4.1 and new versions.
+                    :param layout: layout body
+                    :type layout: bpy.types.UILayout
+                    :param text: header text (Optional) Use registed text if None.
+                    :type text: str
+                    :return: layout_header, Sub-layout to put items in, `UILayout`
+
+            layout_body, Sub-layout to put items in. Will be none if the panel is collapsed., `UILayout`
+            """
+
+            # Details
+            if text:
+                header_text = text
+            else:
+                header_text = self.get_name()
+
+            # Draw
+            if bpy.app.version >= (4, 1, 0): # Use panel_prop() was added only in Blender 4.1.
+                header, panel = layout.panel_prop(self, "expend")
+                header.label(text=header_text)
+            else:
+                tria_icon = "TRIA_DOWN" if self.expend else "TRIA_RIGHT"
+                header = layout.row().prop(self, "expend", icon=tria_icon, icon_only=True, text=header_text, emboss=False, toggle=True, expand=True)
+                if self.expend:
+                    panel = layout
+                else:
+                    panel = None
+
+            # Return
+            return header, panel
 
         def is_expend(self):
             return self.expend

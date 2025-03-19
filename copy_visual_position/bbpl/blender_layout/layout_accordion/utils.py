@@ -27,6 +27,5 @@ import bpy
 from ... import __internal__
 
 def get_class_name():
-    package_name = __internal__.utils.get_package_name()
-    return f"BBPL_UI_{package_name}_Accordion"
+    return __internal__.utils.get_layout_ui_class_name("_accordion")
 
