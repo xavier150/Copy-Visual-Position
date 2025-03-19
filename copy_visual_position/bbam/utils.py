@@ -23,6 +23,8 @@
 #  XavierLoux.com
 # ----------------------------------------------
 
+import bpy
+
 def print_red(*values):
     print("\033[91m", *values, "\033[0m")
 
@@ -39,32 +41,14 @@ def get_str_version(data):
     return f'{data[0]}.{data[1]}.{data[2]}'
 
 
-def get_tuple_range_version(data):
-    """
-    Converts version range data into a list of version tuples.
+def get_should_install(auto_install_range_data):
+    min_version = auto_install_range_data[0]
+    max_version = auto_install_range_data[1]
+    blender_version = bpy.app.version
 
-    Parameters:
-        data (list): A list of two lists, each representing a version range,
-                     e.g., [[1, 0, 0], [2, 0, 0]].
-
-    Returns:
-        list: A list of tuples representing the version range,
-              e.g., [(1, 0, 0), (2, 0, 0)].
-    """
-    return [tuple(data[0]), tuple(data[1])]
-
-
-def get_version_in_range(version, range):
-    """
-    Checks if a given version is within a specified version range.
-
-    Parameters:
-        version (tuple): A tuple representing the current version, e.g., (1, 2, 0).
-        range (list): A list of two tuples representing the minimum and maximum versions,
-                      e.g., [(1, 0, 0), (2, 0, 0)].
-
-    Returns:
-        bool: True if the version is within the specified range; False otherwise.
-    """
-    min_version, max_version = range
-    return min_version <= version <= max_version
+    if max_version == "LATEST":
+        return tuple(min_version) <= blender_version
+    else:
+        return tuple(min_version) <= blender_version <= tuple(max_version)
+    
+    return False

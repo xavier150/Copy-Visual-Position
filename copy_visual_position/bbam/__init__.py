@@ -101,9 +101,7 @@ def install_from_blender_with_build_data(addon_path, addon_manifest_data):
         module = build_data.get("module")
 
         # Check if the addon should be installed based on Blender's version
-        auto_install_range = utils.get_tuple_range_version(build_data.get("auto_install_range"))
-        should_install = utils.get_version_in_range(bpy.app.version, auto_install_range)
-        if should_install:
+        if utils.get_should_install(build_data.get("auto_install_range")):
 
             # Uninstall previous versions if they exist
             blender_utils.uninstall_addon_from_blender(bpy, pkg_id, module)
