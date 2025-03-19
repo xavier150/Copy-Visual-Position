@@ -98,24 +98,79 @@ class ProgressionBarClass():
         # Print the progress message on the same line
         print(msg, end='', flush=True)
 
-
-def print_separation(number=60, char="-"):
+def print_formatted_text(text, width=60, fill_char="=", 
+                         left_border="# ", left_padding=" ", 
+                         right_padding=" ", right_border=" #"):
     """
-    Prints a separation line consisting of '#' characters.
+    Prints formatted text with customizable padding and border characters.
 
     Args:
-        number (int, optional): The number of '#' characters in the line. Defaults to 60.
+        text (str): The text to display.
+        width (int, optional): The total width of the line. Defaults to 60.
+        fill_char (str, optional): The character used to fill the padding. Defaults to '='.
+        left_border (str, optional): The left border characters. Defaults to '# '.
+        left_padding (str, optional): The padding character(s) on the left of the text. Defaults to ' '.
+        right_padding (str, optional): The padding character(s) on the right of the text. Defaults to ' '.
+        right_border (str, optional): The right border characters. Defaults to ' #'.
     """
-    print("# {0} #".format(char * number))
 
+    padding = (width - len(text) - len(left_border) - len(right_border)) // 2
+    if padding < 0:
+        raise ValueError("The width is too small to fit the text and borders.")
+    
+    print(f"{left_border}{fill_char * padding}{left_padding}{text}{right_padding}{fill_char * padding}{right_border}")
 
-def print_title(text, number=60):
+def print_separator(width=60, fill_char="-"):
     """
-    Prints a title surrounded by a line of '#' characters.
+    Prints a separator line with customizable characters.
 
     Args:
-        text (str): The text of the title.
-        number (int, optional): The total number of characters in the line. Defaults to 60.
+        width (int, optional): The width of the separator. Defaults to 60.
+        fill_char (str, optional): The character used to create the separator. Defaults to '-'.
     """
-    remain_number = len(text) - number - 2
-    print("# {0} {1} {2} #".format("-" * remain_number, text, "-" * remain_number))
+    print_formatted_text(
+        text="", 
+        width=width, 
+        fill_char=fill_char, 
+        left_border="# ", 
+        left_padding=fill_char, 
+        right_padding=fill_char, 
+        right_border=" #"
+    )
+
+def print_big_title(text, width=60, border_char="#"):
+    """
+    Prints a big title enclosed by a border.
+
+    Args:
+        text (str): The title text.
+        width (int, optional): The width of the title line. Defaults to 60.
+        border_char (str, optional): The character used for the border. Defaults to '#'.
+    """
+    print(border_char * width)
+    print_formatted_text(
+        text=text, 
+        width=width, 
+        fill_char=border_char, 
+        left_border=border_char, 
+        right_border=border_char
+    )
+    print(border_char * width)
+
+def print_simple_title(text, width=60, fill_char="=", border_char="#"):
+    """
+    Prints a simple title with side borders.
+
+    Args:
+        text (str): The title text.
+        width (int, optional): The width of the title line. Defaults to 60.
+        fill_char (str, optional): The character used to fill the line. Defaults to '='.
+        border_char (str, optional): The character used for the side borders. Defaults to '#'.
+    """
+    print_formatted_text(
+        text=text, 
+        width=width, 
+        fill_char=fill_char, 
+        left_border=border_char + " ", 
+        right_border=" " + border_char
+    )

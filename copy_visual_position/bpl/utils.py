@@ -58,16 +58,7 @@ class CounterTimer():
         Returns:
             str: Elapsed time formatted as a string.
         """
-        elapsed_time = self.get_time()
-        if elapsed_time < 60:
-            return f"{elapsed_time:.2f} secondes"
-        elif elapsed_time < 3600:
-            minutes, seconds = divmod(elapsed_time, 60)
-            return f"{int(minutes)} minutes et {seconds:.2f} secondes"
-        else:
-            hours, remainder = divmod(elapsed_time, 3600)
-            minutes, seconds = divmod(remainder, 60)
-            return f"{int(hours)} heures, {int(minutes)} minutes et {seconds:.2f} secondes"
+        return get_formatted_time(self.get_time())
         
 def format_property_name(name):
     """
@@ -82,3 +73,27 @@ def format_property_name(name):
     # Split the name at underscores, capitalize each part, and join them with spaces
     formatted_name = ' '.join(word.capitalize() for word in name.split('_'))
     return formatted_name
+
+def get_formatted_time(time_in_seconds):
+    """
+    Formats the elapsed time into a readable string, including milliseconds.
+
+    Args:
+        time_in_seconds (float): Time in seconds to format.
+
+    Returns:
+        str: Formatted elapsed time as a string.
+    """
+    milliseconds = int((time_in_seconds - int(time_in_seconds)) * 1000)
+    
+    if time_in_seconds < 1:
+        return f"{milliseconds} ms"
+    elif time_in_seconds < 60:
+        return f"{int(time_in_seconds)} seconds and {milliseconds} ms"
+    elif time_in_seconds < 3600:
+        minutes, seconds = divmod(time_in_seconds, 60)
+        return f"{int(minutes)} minutes, {int(seconds)} seconds and {milliseconds} ms"
+    else:
+        hours, remainder = divmod(time_in_seconds, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        return f"{int(hours)} hours, {int(minutes)} minutes, {int(seconds)} seconds and {milliseconds} ms"
