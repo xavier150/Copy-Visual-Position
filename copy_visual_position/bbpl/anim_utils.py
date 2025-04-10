@@ -456,6 +456,7 @@ class AnimationManagment():
     def __init__(self):
         self.use_animation_data = False
         self.action = None
+        self.action_slot = None
         self.action_extrapolation = "HOLD"
         self.action_blend_type = "REPLACE"
         self.action_influence = 1.0
@@ -473,6 +474,11 @@ class AnimationManagment():
             self.action_extrapolation = obj.animation_data.action_extrapolation
             self.action_blend_type = obj.animation_data.action_blend_type
             self.action_influence = obj.animation_data.action_influence
+
+            # Action was was added in Blender 4.4
+            if bpy.app.version >= (4, 4, 0):
+                self.action_slot = obj.animation_data.action_slot
+
             self.nla_tracks_save = NLA_Save(obj.animation_data.nla_tracks)
             self.use_animation_data = True
         else:
@@ -504,6 +510,13 @@ class AnimationManagment():
 
         if obj.animation_data is not None:
             obj.animation_data.action = self.action
+
+            # Action was was added in Blender 4.4
+            if bpy.app.version >= (4, 4, 0):
+                # Cannot set slot without an assigned Action.
+                if obj.animation_data.action: 
+                    obj.animation_data.action_slot = self.action_slot
+
             obj.animation_data.action_extrapolation = self.action_extrapolation
             obj.animation_data.action_blend_type = self.action_blend_type
             obj.animation_data.action_influence = self.action_influence
