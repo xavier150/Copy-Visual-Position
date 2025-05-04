@@ -26,10 +26,12 @@ import json
 import copy
 import bpy
 import mathutils
+from typing import List
 
-def select_specific_object(obj: bpy.types.Object):
+def select_specific_object_list(active: bpy.types.Object, objs: List[bpy.types.Object]):
     """
-    Selects a specific object in Blender.
+    - Deselect all
+    - Selects a specific list object in Blender.
 
     Args:
         obj (bpy.types.Object): The object to be selected.
@@ -38,10 +40,59 @@ def select_specific_object(obj: bpy.types.Object):
         None
     """
 
+    if active is None:
+        print("In select_specific_object_list the active object is None!")
+        return []
+    if active.name not in bpy.context.view_layer.objects:
+        print(f"The active object {active.name} not found in bpy.context.view_layer.objects!")
+        return []
+
+    selected_objs = []
+
+    # Deselect all
     bpy.ops.object.select_all(action='DESELECT')
-    if obj.name in bpy.context.window.view_layer.objects:
-        obj.select_set(True)
-    bpy.context.view_layer.objects.active = obj
+    bpy.context.view_layer.objects.active = None
+
+    # Select specific objects
+    for obj in objs:
+        if obj.name in bpy.context.window.view_layer.objects:
+            obj.select_set(True)
+            selected_objs.append(obj)
+
+    # Set active at end
+    active.select_set(True)
+    bpy.context.view_layer.objects.active = active
+    selected_objs.append(active)
+
+    return selected_objs
+
+def select_specific_object(active: bpy.types.Object):
+    """
+    - Deselect all
+    - Selects a specific object in Blender.
+
+    Args:
+        obj (bpy.types.Object): The object to be selected.
+
+    Returns:
+        None
+    """
+
+    if active is None:
+        print("In select_specific_object_list the active object is None!")
+        return None
+    if active.name not in bpy.context.view_layer.objects:
+        print(f"The active object {active.name} not found in bpy.context.view_layer.objects!")
+        return None
+
+    # Deselect all
+    bpy.ops.object.select_all(action='DESELECT')
+    bpy.context.view_layer.objects.active = None
+
+    # Select specific object and set active
+    active.select_set(True)
+    bpy.context.view_layer.objects.active = active
+    return active
 
 class UserArmatureDataSave():
     """
