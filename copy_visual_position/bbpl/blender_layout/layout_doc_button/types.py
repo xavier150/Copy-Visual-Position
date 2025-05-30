@@ -28,49 +28,55 @@ import webbrowser
 from . import utils
 
 
-def create_operator_class():
+
+class CustomOpenTargetWebPage_Operator(bpy.types.Operator):
+    bl_label = "Documentation"
+    bl_idname = utils.get_open_target_web_page_idname()
+    bl_description = "Click for open URL."
+    url: bpy.props.StringProperty(default="https://github.com/xavier150/BleuRavenBlenderPythonLibrary")
+
+    def execute(self, context):
+        # Check if the URL starts with http:// or https://
+        if self.url.startswith("http://") or self.url.startswith("https://"):
+            webbrowser.open(self.url)
+            return {'FINISHED'}
+        else:
+            self.report({'WARNING'}, "Invalid URL. Only HTTP and HTTPS URLs are allowed.")
+            return {'CANCELLED'}
+
+def create_doc_operator_class():
     # Create an custom class ussing addon name for avoid name collision.
-    
-    class CustomOpenTargetWebPage_Operator(bpy.types.Operator):
-        bl_label = "Documentation"
-        bl_idname = utils.get_open_target_web_page_idname()
-        bl_description = "Click for open URL."
-        url: bpy.props.StringProperty(default="https://github.com/xavier150/BleuRavenBlenderPythonLibrary")
-
-        def execute(self, context):
-            # Check if the URL starts with http:// or https://
-            if self.url.startswith("http://") or self.url.startswith("https://"):
-                webbrowser.open(self.url)
-                return {'FINISHED'}
-            else:
-                self.report({'WARNING'}, "Invalid URL. Only HTTP and HTTPS URLs are allowed.")
-                return {'CANCELLED'}
-
     CustomOpenTargetWebPage_Operator.__name__ = utils.get_open_target_web_page_class_name()
     return CustomOpenTargetWebPage_Operator
 
+# ----------------- Register ----------------
 
-BBPL_OT_OpenTargetWebPage = create_operator_class()
+BBPL_OT_OpenTargetWebPage_CUSTOM_CLASS = None
+
+def init_doc_button():
+    global BBPL_OT_OpenTargetWebPage_CUSTOM_CLASS
+    if BBPL_OT_OpenTargetWebPage_CUSTOM_CLASS is None:
+        BBPL_OT_OpenTargetWebPage_CUSTOM_CLASS = create_doc_operator_class()
+
+
+init_doc_button()
 
 classes = (
 )
 
-custom_classes = [
-    BBPL_OT_OpenTargetWebPage
-]
 
 
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
 
-    for cls in custom_classes:
-        bpy.utils.register_class(cls)
+    global BBPL_OT_OpenTargetWebPage_CUSTOM_CLASS
+    bpy.utils.register_class(BBPL_OT_OpenTargetWebPage_CUSTOM_CLASS)
 
 
 def unregister():
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
 
-    for cls in reversed(custom_classes):
-        bpy.utils.unregister_class(cls)
+    global BBPL_OT_OpenTargetWebPage_CUSTOM_CLASS
+    bpy.utils.unregister_class(BBPL_OT_OpenTargetWebPage_CUSTOM_CLASS)

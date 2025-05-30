@@ -23,14 +23,11 @@
 # ----------------------------------------------
 
 import bpy
+import re
+
 from . import utils
+from .. import layout_utils
 from ... import __internal__
-
-layout_accordion_class = None
-
-def get_layout_accordion_class():
-    global layout_accordion_class
-    return layout_accordion_class
 
 class CustomAccordionUI_PropertyGroup(bpy.types.PropertyGroup):
     expend: bpy.props.BoolProperty(
@@ -39,14 +36,19 @@ class CustomAccordionUI_PropertyGroup(bpy.types.PropertyGroup):
         default=False,
         options={"HIDDEN", "SKIP_SAVE"}
     )
-    
+
     def get_name(self):
-        if bpy.app.version >= (3, 0, 0):
-            prop_rna = self.id_data.bl_rna.properties[self.id_properties_ensure().name]
-            return prop_rna.name
-        else:
-            prop_rna = self.id_data.bl_rna.properties[self.path_from_id()]
-            return prop_rna.name
+        return layout_utils.get_property_name_from_property_group(self, CustomAccordionUI_PropertyGroup)
+    
+
+    def support_panel_prop(self, layout: bpy.types.UILayout):
+        # Use panel_prop() was added only in Blender 4.1 and work on UI region.type only.
+        # The BBPL one work since Blender 2.8 on any regions.
+
+        if bpy.app.version >= (4, 1, 0):
+            if bpy.context.region.type == "UI":
+                return True
+        return False
 
 
     def draw(self, layout: bpy.types.UILayout, text = None):
@@ -67,7 +69,7 @@ class CustomAccordionUI_PropertyGroup(bpy.types.PropertyGroup):
             header_text = self.get_name()
 
         # Draw
-        if bpy.app.version >= (4, 1, 0): # Use panel_prop() was added only in Blender 4.1.
+        if self.support_panel_prop(layout): 
             header, panel = layout.panel_prop(self, "expend")
             header.label(text=header_text)
         else:
@@ -84,26 +86,40 @@ class CustomAccordionUI_PropertyGroup(bpy.types.PropertyGroup):
     def is_expend(self):
         return self.expend
 
-def create_ui_accordion_class():
+def get_layout_accordion_class():
+    global BBPL_UI_Accordion_CUSTOM_CLASS
+    return BBPL_UI_Accordion_CUSTOM_CLASS
+
+def create_layout_accordion_class():
     # Create an custom class ussing addon name for avoid name collision.
-        
     CustomAccordionUI_PropertyGroup.__name__ = utils.get_class_name()
     return CustomAccordionUI_PropertyGroup
+
+# ----------------- Register ----------------
+
+BBPL_UI_Accordion_CUSTOM_CLASS = None
+
+def init_layout_accordion():
+    global BBPL_UI_Accordion_CUSTOM_CLASS
+    if BBPL_UI_Accordion_CUSTOM_CLASS is None:
+        BBPL_UI_Accordion_CUSTOM_CLASS = create_layout_accordion_class()
+
+init_layout_accordion()
 
 classes = (
 )
 
 def register():
-    global layout_accordion_class
     for cls in classes:
         bpy.utils.register_class(cls)
 
-    BBPL_UI_Accordion = create_ui_accordion_class()
-    layout_accordion_class = BBPL_UI_Accordion
-    bpy.utils.register_class(BBPL_UI_Accordion)
-
+    global BBPL_UI_Accordion_CUSTOM_CLASS
+    bpy.utils.register_class(BBPL_UI_Accordion_CUSTOM_CLASS)
 
 
 def unregister():
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
+
+    global BBPL_UI_Accordion_CUSTOM_CLASS
+    bpy.utils.unregister_class(BBPL_UI_Accordion_CUSTOM_CLASS)

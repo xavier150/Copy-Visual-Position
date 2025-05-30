@@ -25,6 +25,8 @@
 import bpy
 from . import utils
 
+# ----------------- Class Functions ----------------
+
 def send_template_data_on_button(button, template):
     if isinstance(template.id_data, bpy.types.Scene):
         data_type = "Scene"
@@ -38,66 +40,53 @@ def send_template_data_on_button(button, template):
     button.target_id_data_type = data_type
     button.target_variable_name = template.get_name()
 
-def get_template_from_button(button):
+class BBPL_UI_TemplateItem(bpy.types.PropertyGroup):
+    use: bpy.props.BoolProperty(
+        name="Use",
+        default=True
+        )
 
-    if button.target_id_data_type == "Scene":
-        scene = bpy.data.scenes[button.target_id_data_name]
-        #return getattr(scene, button.target_variable_name)
-        return scene.path_resolve(button.target_id_data_path)
-        
+    name: bpy.props.StringProperty(
+        name="Bone groups name",
+        description="Your bone group",
+        default="MyGroup",
+        )
+    
+class BBPL_UL_TemplateItemDraw(bpy.types.UIList):
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
 
-    if button.target_id_data_type == "Object":
-        obj = bpy.data.objects[button.target_id_data_name]
-        #return getattr(obj, button.target_variable_name)
-        return obj.path_resolve(button.target_id_data_path)
+        prop_line = layout
 
+        indexText = layout.row()
+        indexText.alignment = 'LEFT'
+        indexText.scale_x = 1
+        indexText.label(text=str(index))
 
+        prop_use = prop_line.row()
+        prop_use.alignment = 'LEFT'
+        prop_use.prop(item, "use", text="")
 
-def create_template_item_class():
-    class BBPL_UI_TemplateItem(bpy.types.PropertyGroup):
-        use: bpy.props.BoolProperty(
-            name="Use",
-            default=True
-            )
+        #icon = bbpl.ui_utils.getIconByGroupTheme(item.theme)
+        icon = "NONE"
 
-        name: bpy.props.StringProperty(
-            name="Bone groups name",
-            description="Your bone group",
-            default="MyGroup",
-            )
-        
+        prop_data = prop_line.row()
+        prop_data.alignment = 'EXPAND'
+        prop_data.prop(item, "name", text="")
+        prop_data.enabled = item.use
+    
+# ----------------- Init Template Class Functions ----------------
+
+def create_template_item_class():        
     BBPL_UI_TemplateItem.__name__ = utils.get_operator_class_name("TemplateItem")
     return BBPL_UI_TemplateItem
 
 def create_template_item_draw_class():
-    class BBPL_UL_TemplateItemDraw(bpy.types.UIList):
-        def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-
-            prop_line = layout
-
-            indexText = layout.row()
-            indexText.alignment = 'LEFT'
-            indexText.scale_x = 1
-            indexText.label(text=str(index))
-
-            prop_use = prop_line.row()
-            prop_use.alignment = 'LEFT'
-            prop_use.prop(item, "use", text="")
-
-            #icon = bbpl.ui_utils.getIconByGroupTheme(item.theme)
-            icon = "NONE"
-
-            prop_data = prop_line.row()
-            prop_data.alignment = 'EXPAND'
-            prop_data.prop(item, "name", text="")
-            prop_data.enabled = item.use
-
     BBPL_UL_TemplateItemDraw.__name__ = utils.get_operator_class_name("TemplateItemDraw")
     return BBPL_UL_TemplateItemDraw
 
 def create_template_list_class(TemplateItem, TemplateItemDraw):
-    class BBPL_UI_TemplateList(bpy.types.PropertyGroup):
 
+    class BBPL_UI_TemplateList(bpy.types.PropertyGroup):
         template_collection: bpy.props.CollectionProperty(type = TemplateItem)
         template_collection_uilist_class_name = ""
         active_template_property: bpy.props.IntProperty(default = 0)
@@ -170,23 +159,46 @@ def create_template_list_class(TemplateItem, TemplateItemDraw):
             button_duplicate = template_column.operator(utils.get_template_button_idname("duplicate"), icon='ADD', text="")
             send_template_data_on_button(button_duplicate, self)
             return template_row
+
+
     BBPL_UI_TemplateList.__name__ = utils.get_operator_class_name("TemplateList")
     return BBPL_UI_TemplateList
 
-def create_template_button_base_class():
-    utils.get_template_button_class_name("base")
-    class BBPL_OT_TemplateButtonBase(bpy.types.Operator):
-        bl_label = "Template Actions"
-        bl_options = {'REGISTER'}
+# ----------------- Template Button Class ----------------
 
-        target_id_data_path: bpy.props.StringProperty()
-        target_id_data_name: bpy.props.StringProperty()
-        target_id_data_type: bpy.props.StringProperty()
-        target_variable_name: bpy.props.StringProperty()
+def get_template_from_button(button):
+
+    if button.target_id_data_type == "Scene":
+        scene = bpy.data.scenes[button.target_id_data_name]
+        #return getattr(scene, button.target_variable_name)
+        return scene.path_resolve(button.target_id_data_path)
+        
+
+    if button.target_id_data_type == "Object":
+        obj = bpy.data.objects[button.target_id_data_name]
+        #return getattr(obj, button.target_variable_name)
+        return obj.path_resolve(button.target_id_data_path)
+
+class BBPL_OT_TemplateButtonBase(bpy.types.Operator):
+    bl_label = "Template Actions"
+    bl_options = {'REGISTER'}
+
+    target_id_data_path: bpy.props.StringProperty()
+    target_id_data_name: bpy.props.StringProperty()
+    target_id_data_type: bpy.props.StringProperty()
+    target_variable_name: bpy.props.StringProperty()
+
+
+# ----------------- Init Template button Class Functions ----------------
+
+def create_template_button_base_class():
+    # Create an custom class ussing addon name for avoid name collision.
     BBPL_OT_TemplateButtonBase.__name__ = utils.get_template_button_class_name("base")
     return BBPL_OT_TemplateButtonBase
 
 def create_template_button_duplicate_class(TemplateButtonBase):
+    # Create an custom class ussing addon name for avoid name collision.
+
     class BBPL_OT_TemplateButtonDuplicate(TemplateButtonBase):
         bl_idname = utils.get_template_button_idname("duplicate")
         bl_description = "Duplicate active item."
@@ -200,10 +212,13 @@ def create_template_button_duplicate_class(TemplateButtonBase):
             last_index = len(template.template_collection)-1
             template.active_template_property = last_index
             return {"FINISHED"}
+
     BBPL_OT_TemplateButtonDuplicate.__name__ = utils.get_template_button_class_name("duplicate")
     return BBPL_OT_TemplateButtonDuplicate
 
 def create_template_button_add_class(TemplateButtonBase):
+    # Create an custom class ussing addon name for avoid name collision.
+
     class BBPL_OT_TemplateButtonAdd(TemplateButtonBase):
         bl_idname = utils.get_template_button_idname("add")
         bl_description = "Add item."
@@ -218,11 +233,15 @@ def create_template_button_add_class(TemplateButtonBase):
                 )
             template.active_template_property = last_index
             return {"FINISHED"}
+        
     BBPL_OT_TemplateButtonAdd.__name__ = utils.get_template_button_class_name("add")
     return BBPL_OT_TemplateButtonAdd
 
 def create_template_button_remove_class(TemplateButtonBase):
+    # Create an custom class ussing addon name for avoid name collision.
+
     class BBPL_OT_TemplateButtonRemove(TemplateButtonBase):
+
         bl_idname = utils.get_template_button_idname("remove")
         bl_description = "remove item."
 
@@ -233,10 +252,13 @@ def create_template_button_remove_class(TemplateButtonBase):
             if template.active_template_property < 0:
                 template.active_template_property = 0
             return {"FINISHED"}
+
     BBPL_OT_TemplateButtonRemove.__name__ = utils.get_template_button_class_name("remove")
     return BBPL_OT_TemplateButtonRemove
 
 def create_template_button_moveup_class(TemplateButtonBase):
+    # Create an custom class ussing addon name for avoid name collision.
+
     class BBPL_OT_TemplateButtonMoveUp(TemplateButtonBase):
         bl_idname = utils.get_template_button_idname("moveup")
         bl_description = "Move items up."
@@ -250,10 +272,13 @@ def create_template_button_moveup_class(TemplateButtonBase):
             if template.active_template_property > 0:
                 template.active_template_property -= 1
             return {"FINISHED"}
+
     BBPL_OT_TemplateButtonMoveUp.__name__ = utils.get_template_button_class_name("moveup")
     return BBPL_OT_TemplateButtonMoveUp
 
 def create_template_button_movedown_class(TemplateButtonBase):
+    # Create an custom class ussing addon name for avoid name collision.
+
     class BBPL_OT_TemplateButtonMoveDown(TemplateButtonBase):
         bl_idname = utils.get_template_button_idname("movedown")
         bl_description = "Move items down."
@@ -267,23 +292,38 @@ def create_template_button_movedown_class(TemplateButtonBase):
             if template.active_template_property < len(template.template_collection)-1:
                 template.active_template_property += 1
             return {"FINISHED"}
+
     BBPL_OT_TemplateButtonMoveDown.__name__ = utils.get_template_button_class_name("movedown")
     return BBPL_OT_TemplateButtonMoveDown
 
-template_button_base = create_template_button_base_class()
-BBPL_OT_TemplateButtonDuplicate = create_template_button_duplicate_class(template_button_base)
-BBPL_OT_TemplateButtonAdd = create_template_button_add_class(template_button_base)
-BBPL_OT_TemplateButtonRemove = create_template_button_remove_class(template_button_base)
-BBPL_OT_TemplateButtonMoveUp = create_template_button_moveup_class(template_button_base)
-BBPL_OT_TemplateButtonMoveDown = create_template_button_movedown_class(template_button_base)
+# ----------------- Register ----------------
 
-custom_classes = [
-    BBPL_OT_TemplateButtonDuplicate,
-    BBPL_OT_TemplateButtonAdd,
-    BBPL_OT_TemplateButtonRemove,
-    BBPL_OT_TemplateButtonMoveUp,
-    BBPL_OT_TemplateButtonMoveDown,
-]
+TemplateButtonsInit = False
+BBPL_OT_TemplateButtonDuplicate_CUSTOM_CLASS = None
+BBPL_OT_TemplateButtonAdd_CUSTOM_CLASS = None
+BBPL_OT_TemplateButtonRemove_CUSTOM_CLASS = None
+BBPL_OT_TemplateButtonMoveUp_CUSTOM_CLASS = None
+BBPL_OT_TemplateButtonMoveDown_CUSTOM_CLASS = None
+
+def init_doc_template_buttons():
+    global TemplateButtonsInit
+    if TemplateButtonsInit is False:
+
+        global BBPL_OT_TemplateButtonDuplicate_CUSTOM_CLASS
+        global BBPL_OT_TemplateButtonAdd_CUSTOM_CLASS
+        global BBPL_OT_TemplateButtonRemove_CUSTOM_CLASS
+        global BBPL_OT_TemplateButtonMoveUp_CUSTOM_CLASS
+        global BBPL_OT_TemplateButtonMoveDown_CUSTOM_CLASS
+
+        template_button_base = create_template_button_base_class()
+        BBPL_OT_TemplateButtonDuplicate_CUSTOM_CLASS = create_template_button_duplicate_class(template_button_base)
+        BBPL_OT_TemplateButtonAdd_CUSTOM_CLASS = create_template_button_add_class(template_button_base)
+        BBPL_OT_TemplateButtonRemove_CUSTOM_CLASS = create_template_button_remove_class(template_button_base)
+        BBPL_OT_TemplateButtonMoveUp_CUSTOM_CLASS = create_template_button_moveup_class(template_button_base)
+        BBPL_OT_TemplateButtonMoveDown_CUSTOM_CLASS = create_template_button_movedown_class(template_button_base)
+        TemplateButtonsInit = True
+
+init_doc_template_buttons()
 
 classes = (
 )
@@ -292,13 +332,34 @@ def register():
     for cls in classes:
         bpy.utils.register_class(cls)
 
-    for cls in custom_classes:
-        bpy.utils.register_class(cls)
+    global BBPL_OT_TemplateButtonDuplicate_CUSTOM_CLASS
+    global BBPL_OT_TemplateButtonAdd_CUSTOM_CLASS
+    global BBPL_OT_TemplateButtonRemove_CUSTOM_CLASS
+    global BBPL_OT_TemplateButtonMoveUp_CUSTOM_CLASS
+    global BBPL_OT_TemplateButtonMoveDown_CUSTOM_CLASS
+
+    bpy.utils.register_class(BBPL_OT_TemplateButtonDuplicate_CUSTOM_CLASS)
+    bpy.utils.register_class(BBPL_OT_TemplateButtonAdd_CUSTOM_CLASS)
+    bpy.utils.register_class(BBPL_OT_TemplateButtonRemove_CUSTOM_CLASS)
+    bpy.utils.register_class(BBPL_OT_TemplateButtonMoveUp_CUSTOM_CLASS)
+    bpy.utils.register_class(BBPL_OT_TemplateButtonMoveDown_CUSTOM_CLASS)
 
 
 def unregister():
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
 
-    for cls in reversed(custom_classes):
-        bpy.utils.unregister_class(cls)
+    global BBPL_OT_TemplateButtonDuplicate_CUSTOM_CLASS
+    global BBPL_OT_TemplateButtonAdd_CUSTOM_CLASS
+    global BBPL_OT_TemplateButtonRemove_CUSTOM_CLASS
+    global BBPL_OT_TemplateButtonMoveUp_CUSTOM_CLASS
+    global BBPL_OT_TemplateButtonMoveDown_CUSTOM_CLASS
+
+    bpy.utils.unregister_class(BBPL_OT_TemplateButtonMoveDown_CUSTOM_CLASS)
+    bpy.utils.unregister_class(BBPL_OT_TemplateButtonMoveUp_CUSTOM_CLASS)
+    bpy.utils.unregister_class(BBPL_OT_TemplateButtonRemove_CUSTOM_CLASS)
+    bpy.utils.unregister_class(BBPL_OT_TemplateButtonAdd_CUSTOM_CLASS)
+    bpy.utils.unregister_class(BBPL_OT_TemplateButtonDuplicate_CUSTOM_CLASS)
+
+
+
