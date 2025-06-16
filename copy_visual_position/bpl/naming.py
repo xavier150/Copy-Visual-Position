@@ -23,17 +23,18 @@
 #  XavierLoux.com
 # ----------------------------------------------
 
+from typing import List, Tuple
 
-def get_mirror_arrays():
-    def add_mirror(source_suffixes, mirror_suffixes, source, mirror):
+def get_mirror_arrays() -> Tuple[List[str], List[str]]:
+    def add_mirror(source_suffixes: List[str], mirror_suffixes: List[str], source: str, mirror: str):
         source_suffixes.append(source)
         mirror_suffixes.append(mirror)
         source_suffixes.append(mirror)
         mirror_suffixes.append(source)
 
 
-    source_suffixes = []
-    mirror_suffixes = []
+    source_suffixes: List[str] = []
+    mirror_suffixes: List[str] = []
     
     add_mirror(source_suffixes, mirror_suffixes, "_L", "_R")
     add_mirror(source_suffixes, mirror_suffixes, "_l", "_r")
@@ -47,11 +48,11 @@ def get_mirror_arrays():
     return source_suffixes, mirror_suffixes
 
 
-def contain_laterality_suffix(string):
+def contain_laterality_suffix(string: str) -> bool:
     source_suffixes, mirror_suffixes = get_mirror_arrays()
     return any(string.endswith(suffix) for suffix in source_suffixes + mirror_suffixes)
-    
-def remove_laterality_suffix(string):
+
+def remove_laterality_suffix(string: str) -> str:
     source_suffixes, mirror_suffixes = get_mirror_arrays()
     all_suffixes = source_suffixes + mirror_suffixes
     for suffix in all_suffixes:
@@ -59,9 +60,10 @@ def remove_laterality_suffix(string):
             return string[:-len(suffix)]
     return string
 
-def get_laterality_suffix(string):
+def get_laterality_suffix(string: str) -> str:
     source_suffixes, mirror_suffixes = get_mirror_arrays()
     all_suffixes = source_suffixes + mirror_suffixes
     for suffix in all_suffixes:
         if string.endswith(suffix):
             return suffix
+    return ""

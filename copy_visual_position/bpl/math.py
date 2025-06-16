@@ -24,7 +24,7 @@
 # ----------------------------------------------
 
 
-def next_power_of_two(n):
+def next_power_of_two(n: int) -> int:
     """
     Computes the next power of two that is greater than or equal to n.
 
@@ -46,7 +46,7 @@ def next_power_of_two(n):
     return n << 1
 
 
-def previous_power_of_two(n):
+def previous_power_of_two(n: int) -> int:
     """
     Computes the previous power of two that is less than or equal to n.
 
@@ -64,7 +64,7 @@ def previous_power_of_two(n):
     return n
 
 
-def nearest_power_of_two(value):
+def nearest_power_of_two(value: int) -> int:
     """
     Computes the nearest power of two to the given value.
 
