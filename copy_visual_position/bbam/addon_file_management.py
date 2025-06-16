@@ -27,33 +27,45 @@ import shutil
 import tempfile
 import sys
 import os
+from typing import Optional, List, Set
 from . import manifest_generate
 from . import bl_info_generate
 from . import config
-from . import utils
 from . import blender_exec
-from . import blender_utils
+from .bbam_addon_config.bbam_addon_config_type import BBAM_AddonConfig, BBAM_AddonBuild, BBAM_GenerateMethod
 
 
-def copy_addon_folder(src, dst, exclude_paths=[], include_paths=[]):
+def copy_addon_folder(
+    src: str,
+    dst: str,
+    exclude_paths: list[str] = [],
+    include_paths: list[str] = []
+):
     """
     Copies the addon folder from 'src' to 'dst' while excluding specified files and folders.
-
-    Parameters:
-        src (str): Source path of the addon.
-        dst (str): Destination path for the copied addon.
-        exclude_paths (list): List of file or folder paths to exclude during the copy process.
     """
+
+    exclude_folders = ["__pycache__", ".git", ".svn", ".vscode", ".idea", "node_modules"]
+    exclude_files = [".blend1", ".blend2", ".blend3", ".blend4", ".blend5", ".blend6", ".blend7", ".blend8", ".blend9"]
+
     # Normalize paths for comparison
     exclude_paths = [os.path.normpath(path) for path in exclude_paths]
     include_paths = [os.path.normpath(path) for path in include_paths]
 
     # Ignore function to exclude specific files/folders during the copy
-    def ignore_files(dir, files):
-        ignore_list = []
+    def ignore_files(dir: str, files: List[str]) -> Set[str]:
+        ignore_list: Set[str] = set()
         for file in files:
             file_path = os.path.join(dir, file)
             relative_path = os.path.normpath(os.path.relpath(file_path, src))
+
+            # Exclure les dossiers par nom
+            if file in exclude_folders and os.path.isdir(file_path):
+                continue
+
+            # Exclure les fichiers par extension
+            if any(file.endswith(ext) for ext in exclude_files) and os.path.isfile(file_path):
+                continue
 
             # Skip directories if only files should be ignored
             if os.path.isdir(file_path):
@@ -65,114 +77,104 @@ def copy_addon_folder(src, dst, exclude_paths=[], include_paths=[]):
 
             # Check if the file path should be excluded
             if any(relative_path.startswith(os.path.normpath(path)) for path in exclude_paths):
-                ignore_list.append(file)
-        return set(ignore_list)
+                ignore_list.add(file)
+        return ignore_list
 
     shutil.copytree(src, dst, ignore=ignore_files)
 
 
-def create_temp_addon_folder(addon_path, addon_manifest_data, target_build_name, show_debug=True):
+def create_temp_addon_folder(
+    addon_path: str, 
+    build_config: BBAM_AddonBuild,
+) -> str:
     """
     Creates a temporary folder for the addon, copies relevant files, and generates the manifest.
-
-    Parameters:
-        addon_path (str): Root path of the addon.
-        addon_manifest_data (dict): Manifest data containing build specifications.
-        target_build_name (str): Name of the target build configuration.
-        show_debug (bool): If True, debug information is displayed.
-
-    Returns:
-        str: Path to the temporary addon folder.
     """
-    build_data = addon_manifest_data["builds"][target_build_name]
-    generate_method = build_data["generate_method"]
+    
 
     # Step 1: Create a temporary directory for the addon
     temp_dir = tempfile.mkdtemp(prefix="blender_addon_")
     temp_addon_path = os.path.join(temp_dir, os.path.basename(addon_path))
 
     # Step 2: Copy addon folder to temporary directory, excluding specified paths
-    exclude_paths = build_data.get("exclude_paths", [])
-    include_paths = build_data.get("include_paths", [])
+    exclude_paths = build_config.exclude_paths
+    include_paths = build_config.include_paths
     exclude_paths.append("bbam/")  # Exclude addon manager from the final build
     copy_addon_folder(addon_path, temp_addon_path, exclude_paths, include_paths)
-    print(f"Copied build '{target_build_name}' to temporary location: {temp_addon_path}")
-
-    # Step 3: Generate addon manifest based on generation method
-    if generate_method == "EXTENTION_COMMAND":
-        new_manifest = manifest_generate.generate_new_manifest(addon_manifest_data, target_build_name)
-        manifest_generate.save_addon_manifest(temp_addon_path, new_manifest, show_debug)
-    elif generate_method == "SIMPLE_ZIP":
-        new_manifest = bl_info_generate.generate_new_bl_info(addon_manifest_data, target_build_name)
-        bl_info_generate.update_file_bl_info(temp_addon_path, new_manifest, show_debug)
-
+    print(f"Copied build '{build_config.build_id}' to temporary location")
+    print(f"Path: {temp_addon_path}")
     return temp_addon_path
 
-def get_zip_output_filename(addon_path, addon_manifest_data, target_build_name):
+def generate_addon_files(
+    addon_path: str, 
+    addon_config: BBAM_AddonConfig,
+    build_config: BBAM_AddonBuild,
+    show_debug: bool = True
+) -> None:
+    generate_method = build_config.generate_method
+    if generate_method == BBAM_GenerateMethod.EXTENTION_COMMAND:
+        new_manifest = manifest_generate.generate_new_manifest(addon_config, build_config)
+        manifest_generate.save_addon_manifest(addon_path, new_manifest, show_debug)
+    elif generate_method == BBAM_GenerateMethod.SIMPLE_ZIP:
+        new_manifest = bl_info_generate.generate_new_bl_info(addon_config, build_config)
+        bl_info_generate.update_file_bl_info(addon_path, new_manifest, show_debug)
+    
+
+def get_zip_output_filename(
+    addon_path: str, 
+    build_config: BBAM_AddonBuild,
+):
     """
     Generates the output filename for the ZIP file based on naming conventions in the manifest.
-
-    Parameters:
-        addon_path (str): Root path of the addon.
-        addon_manifest_data (dict): Manifest data containing build specifications.
-        target_build_name (str): Name of the target build configuration.
-
-    Returns:
-        str: Full path of the output ZIP file.
     """
-    manifest_data = addon_manifest_data["blender_manifest"]
-    build_data = addon_manifest_data["builds"][target_build_name]
-    version = utils.get_str_version(manifest_data["version"])
 
     # Formatting output filename
+    version_str = build_config.get_version_as_string()
     output_folder_path = os.path.abspath(os.path.join(addon_path, '..', config.build_output_folder))
-    formatted_file_name = build_data["naming"].replace("{Name}", build_data["pkg_id"]).replace("{Version}", version)
+    formatted_file_name = build_config.naming.replace("{Name}", build_config.pkg_id).replace("{Version}", version_str)
     output_filepath = os.path.join(output_folder_path, formatted_file_name)
     return output_filepath
 
-def zip_addon_folder(src, addon_path, addon_manifest_data, target_build_name, blender_executable_path):
+def zip_addon_folder(
+    src: str, 
+    addon_path: str, 
+    build_config: BBAM_AddonBuild,
+    blender_executable_path: str
+) -> Optional[str]:
     """
     Creates a ZIP archive of the addon folder, either through Blender's extension command
     or by using a simple ZIP method.
-
-    Parameters:
-        src (str): Path to the source addon folder.
-        addon_path (str): Root path of the addon.
-        addon_manifest_data (dict): Manifest data containing build specifications.
-        target_build_name (str): Name of the target build configuration.
-        blender_executable_path (str): Path to the Blender executable for running commands.
-
-    Returns:
-        str: Path to the created ZIP file.
     """
-    build_data = addon_manifest_data["builds"][target_build_name]
-    generate_method = build_data["generate_method"]
+    generate_method = build_config.generate_method
 
     # Define output file path and ensure the output directory exists
-    output_filepath = get_zip_output_filename(addon_path, addon_manifest_data, target_build_name)
+    output_filepath = get_zip_output_filename(addon_path, build_config)
     output_dir = os.path.dirname(output_filepath)
     os.makedirs(output_dir, exist_ok=True)
 
     # Run addon zip process based on the specified generation method
-    if generate_method == "EXTENTION_COMMAND":
+    if generate_method == BBAM_GenerateMethod.EXTENTION_COMMAND:
         print("Start build with extension command")
         result = blender_exec.build_extension(src, output_filepath, blender_executable_path)
-        print(result.stdout)
-        print(result.stderr, file=sys.stderr)
+        if result.returncode == 0:
+            created_filename = blender_exec.get_build_file(result)
+            if created_filename:
+                print(f"EXTENTION_COMMAND created successfully at {created_filename}")
+                return created_filename
+            else:
+                print("Error: No created filename found in the result of the extension command.")
+                return None
+        else:  
+            print(f"Error: Build failed with return code {result.returncode}.", file=sys.stderr)
+            print(result.stdout, file=sys.stderr)
+            print(result.stderr, file=sys.stderr)
+            return None
 
-        created_filename = blender_exec.get_build_file(result)
-        if created_filename:
-            print("Start Validate")
-            blender_exec.validate_extension(created_filename, blender_executable_path)
-            print("End Validate")
-
-        return created_filename
-    
-    elif generate_method == "SIMPLE_ZIP":
+    elif generate_method == BBAM_GenerateMethod.SIMPLE_ZIP:
         print("Start creating simple ZIP file with root folder using shutil")
 
         # Specify the root folder name inside the ZIP file
-        root_folder_name = build_data["module"]
+        root_folder_name = build_config.module
 
         # Create a temporary directory
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -186,3 +188,34 @@ def zip_addon_folder(src, addon_path, addon_manifest_data, target_build_name, bl
         
         print(f"SIMPLE_ZIP created successfully at {output_filepath}")
         return output_filepath
+    
+def validate_zip_file(
+    zip_file: str, 
+    build_config: BBAM_AddonBuild,
+    blender_executable_path: str
+) -> bool:
+    """
+    Validates the generated ZIP file
+    """
+    generate_method = build_config.generate_method
+
+        # Run addon zip process based on the specified generation method
+    if generate_method == BBAM_GenerateMethod.EXTENTION_COMMAND:
+        print("Start validate with extension command")
+        result = blender_exec.validate_extension(zip_file, blender_executable_path)
+        if result.returncode == 0:
+            print("Validation successful.")
+            return True
+        else:
+            print(f"Validation failed with return code {result.returncode}.", file=sys.stderr)
+            print(result.stdout, file=sys.stderr)
+            print(result.stderr, file=sys.stderr)
+            return False
+
+    elif generate_method == BBAM_GenerateMethod.SIMPLE_ZIP:
+        print("No validation needed for SIMPLE_ZIP method.")
+        return True
+    
+    return False
+
+    

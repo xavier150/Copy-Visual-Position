@@ -23,11 +23,14 @@
 #  XavierLoux.com
 # ----------------------------------------------
 
-import sys
 import re
 import subprocess
 
-def build_extension(src, dst, blender_executable_path):
+def build_extension(
+    src: str,
+    dst: str,
+    blender_executable_path: str
+) -> subprocess.CompletedProcess[str]:
     """
     Builds an extension using Blender's executable with specified source and destination paths.
 
@@ -41,15 +44,20 @@ def build_extension(src, dst, blender_executable_path):
     """
     command = [
         blender_executable_path,
+        '--background',
         '--factory-startup',
         '--command', 'extension', 'build',
         '--source-dir', src,
         '--output-filepath', dst,
     ]
+
+
     result = subprocess.run(command, capture_output=True, text=True)
     return result
 
-def get_build_file(build_result):
+def get_build_file(
+    build_result: subprocess.CompletedProcess[str]
+) -> str | None:
     """
     Extracts the path of the created build file from the build result output.
 
@@ -64,7 +72,10 @@ def get_build_file(build_result):
         return match.group(1)
     return None
 
-def validate_extension(path, blender_executable_path):
+def validate_extension(
+    path: str, 
+    blender_executable_path: str
+) -> subprocess.CompletedProcess[str]:
     """
     Validates the built extension using Blender's executable.
 
@@ -74,14 +85,11 @@ def validate_extension(path, blender_executable_path):
     """
     validate_command = [
         blender_executable_path,
+        '--background',
         '--factory-startup',
         '--command', 'extension', 'validate', 
         path,
     ]
-    result = subprocess.run(validate_command, capture_output=True, text=True)
 
-    # Output results for debugging purposes
-    if result.returncode == 0:
-        print("Validation successful.")
-    else:
-        print(f"Validation failed. Error: {result.stderr}", file=sys.stderr)
+    result = subprocess.run(validate_command, capture_output=True, text=True)
+    return result

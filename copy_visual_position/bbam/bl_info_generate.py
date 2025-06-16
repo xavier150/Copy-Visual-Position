@@ -25,46 +25,39 @@
 
 import os
 import ast
-from . import config
+from typing import Dict, Any
 from . import utils
+from .bbam_addon_config.bbam_addon_config_type import BBAM_AddonConfig, BBAM_AddonBuild
 
-def generate_new_bl_info(addon_generate_config_data, target_build_name):
+
+
+def generate_new_bl_info(
+    addon_config: BBAM_AddonConfig,
+    build_config: BBAM_AddonBuild,
+):
     """
     Generates a new `bl_info` dictionary for the addon based on the configuration data.
-
-    Parameters:
-        addon_generate_config_data (dict): Data containing addon configurations.
-        target_build_name (str): The name of the target build configuration.
-
-    Returns:
-        dict: A dictionary representing the new `bl_info` for the addon.
     """
-    # Check if the target build data exists
-    if target_build_name not in addon_generate_config_data["builds"]:
-        print(f"Error: Build data for '{target_build_name}' not found!")
-        return {}
-
-    manifest_data = addon_generate_config_data["blender_manifest"]
-    build_data = addon_generate_config_data["builds"][target_build_name]
+    addon_manifest = addon_config.addon_manifest
 
     # Populate `bl_info` with addon details
-    data = {
-        'name': manifest_data["name"],
-        'author': manifest_data["maintainer"],
-        'version': tuple(manifest_data["version"]),
-        'blender': tuple(build_data["blender_version_min"]),
+    data: Dict[str, Any] = {
+        'name': addon_manifest.addon_name,
+        'author': addon_manifest.maintainer,
+        'version': tuple(addon_manifest.addon_version),
+        'blender': tuple(build_config.blender_version_min),
         'location': 'View3D > UI > Unreal Engine',
-        'description': manifest_data["tagline"],
+        'description': addon_manifest.tagline,
         'warning': '',
-        "wiki_url": manifest_data["website_url"],
-        'tracker_url': manifest_data["report_issue_url"],
-        'support': manifest_data["support"],
-        'category': manifest_data["category"]
+        "wiki_url": addon_manifest.website_url,
+        'tracker_url': addon_manifest.report_issue_url,
+        'support': addon_manifest.support,
+        'category': addon_manifest.category
     }
 
     return data
 
-def format_bl_info_lines(data):
+def format_bl_info_lines(data: Dict[str, Any]) -> list[str]:
     # Format the new `bl_info` dictionary with line breaks and indentation
     new_bl_info_lines = ["bl_info = {"]
     items = list(data.items())
@@ -76,7 +69,11 @@ def format_bl_info_lines(data):
     new_bl_info_lines.append("}\n")  # Close `bl_info` and add an extra line break for readability
     return new_bl_info_lines
 
-def update_file_bl_info(addon_path, data, show_debug=False):
+def update_file_bl_info(
+    addon_path: str,
+    data: Dict[str, Any],
+    show_debug: bool = False
+):
     """
     Updates the `bl_info` dictionary in the addon's __init__.py file with new data.
 
@@ -103,18 +100,23 @@ def update_file_bl_info(addon_path, data, show_debug=False):
 
 
 
-def search_file_bl_info(file_path):
+def search_file_bl_info(
+    file_path: str
+):
     with open(file_path, "r") as file:
         content = file.read()
         tree = ast.parse(content)
 
     # Locate existing `bl_info` definition
     for node in tree.body:
-        if isinstance(node, ast.Assign) and any(target.id == "bl_info" for target in node.targets):
+        if isinstance(node, ast.Assign) and any(isinstance(target, ast.Name) and target.id == "bl_info" for target in node.targets):
             return True
     return False
 
-def replace_file_bl_info(file_path, data):
+def replace_file_bl_info(
+    file_path: str, 
+    data: Dict[str, Any]
+) -> bool:
     with open(file_path, "r") as file:
         content = file.read()
         tree = ast.parse(content)
@@ -122,8 +124,8 @@ def replace_file_bl_info(file_path, data):
     # Locate existing `bl_info` definition
     start_bl_info = None
     end_bl_info = None
-    for index, node in enumerate(tree.body):
-        if isinstance(node, ast.Assign) and any(target.id == "bl_info" for target in node.targets):
+    for node in tree.body:
+        if isinstance(node, ast.Assign) and any(isinstance(target, ast.Name) and target.id == "bl_info" for target in node.targets):
             start_bl_info = node.lineno - 1  # Start line of `bl_info`
             end_bl_info = node.end_lineno  # End line of `bl_info`
             break
@@ -142,14 +144,17 @@ def replace_file_bl_info(file_path, data):
         return True
     return False
 
-def add_new_bl_info(file_path, data):
+def add_new_bl_info(
+    file_path: str,
+    data: Dict[str, Any]
+) -> bool:
     with open(file_path, "r") as file:
         content = file.read()
         tree = ast.parse(content)
 
     # Find the line number of the `register` function
     index_register = None
-    for index, node in enumerate(tree.body):
+    for node in tree.body:
         if isinstance(node, ast.FunctionDef) and node.name == "register":
             index_register = node.lineno - 1  # `lineno` starts at 1, so we subtract 1 for zero-based index
             break

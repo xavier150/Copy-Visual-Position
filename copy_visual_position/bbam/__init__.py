@@ -24,9 +24,10 @@
 # ----------------------------------------------
 
 import os
-import json
 import importlib
 
+from . import bbam_addon_config
+from . import bbam_process
 from . import config
 from . import manifest_generate
 from . import bl_info_generate
@@ -36,6 +37,10 @@ from . import blender_exec
 from . import blender_utils
 
 # Reloading modules if they're already loaded
+if "bbam_addon_config" in locals():
+    importlib.reload(bbam_addon_config)
+if "bbam_process" in locals():
+    importlib.reload(bbam_process)
 if "config" in locals():
     importlib.reload(config)
 if "manifest_generate" in locals():
@@ -51,58 +56,8 @@ if "blender_exec" in locals():
 if "blender_utils" in locals():
     importlib.reload(blender_utils)
 
-def install_from_blender():
-    """
-    Loads the addon's configuration file to retrieve its manifest data and initiates
-    the installation process within Blender.
-    """
-    # Get the path of the current addon's configuration file from `config`
-    addon_manifest = config.addon_generate_config
 
-    # Construct absolute paths for addon and manifest file
-    addon_path = os.path.abspath(os.path.join(__file__, '..', '..'))
-    search_addon_folder = os.path.abspath(os.path.join(addon_path, addon_manifest))
-
-    # Load the manifest file data if it exists
-    if os.path.isfile(search_addon_folder):
-        with open(search_addon_folder, 'r', encoding='utf-8') as file:
-            data = json.load(file)
-            install_from_blender_with_build_data(addon_path, data)
-    else:
-        print(f"Error: '{addon_manifest}' was not found in '{search_addon_folder}'.")
-
-def install_from_blender_with_build_data(addon_path, addon_manifest_data):
-    """
-    Manages the addon installation in Blender based on the build data from the manifest.
-
-    Parameters:
-        addon_path (str): The path to the addon's root directory.
-        addon_manifest_data (dict): The data structure containing build specifications.
-    """
-    # Import bpy lib here when exec from Blender.
-    import bpy
-
-    # Get Blender executable path from bpy
-    blender_executable_path = bpy.app.binary_path
-
-    # Process each build specified in the manifest data
-    for target_build_name in addon_manifest_data["builds"]:
-        # Create temporary addon folder
-        temp_addon_path = addon_file_management.create_temp_addon_folder(
-            addon_path, addon_manifest_data, target_build_name, config.show_debug
-        )
-        # Zip the addon folder for installation
-        zip_file = addon_file_management.zip_addon_folder(
-            temp_addon_path, addon_path, addon_manifest_data, target_build_name, blender_executable_path
-        )
-        
-        build_data = addon_manifest_data["builds"][target_build_name]
-        pkg_id = build_data.get("pkg_id")
-        module = build_data.get("module")
-
-        # Check if the addon should be installed based on Blender's version
-        if utils.get_should_install(build_data.get("auto_install_range")):
-
-            # Uninstall previous versions if they exist
-            blender_utils.uninstall_addon_from_blender(bpy, pkg_id, module)
-            blender_utils.install_zip_addon_from_blender(bpy, zip_file, module)
+def install_from_blender(current_only: bool = False):
+    # Clear the console before starting the installation process
+    os.system('cls' if os.name == 'nt' else 'clear')
+    bbam_process.process_install_from_blender(current_only)

@@ -23,43 +23,38 @@
 #  XavierLoux.com
 # ----------------------------------------------
 
-import os
+from pathlib import Path
+import argparse
 import sys
 import importlib.util
 
-# get bbam __init__.py file
-bbam_path = os.path.abspath(os.path.join(__file__, '..', '..', '__init__.py'))
+# ---------------------------------------------------------------
+#  This script is used to install the BBAM addon from Blender.
+#  See 'exemple_file.py' for running this script from Blender
+# ----------------------------------------------------------------
+
+parser = argparse.ArgumentParser(description="Installer BBAM depuis Blender")
+parser.add_argument("--current_only", type=str, help="Build only addon for the current Blender version", default="False")
+args = parser.parse_args()
+current_only: bool = args.current_only.lower() == 'true'
+
+# get bbam __init__.py file avec pathlib
+bbam_path = (Path(__file__).parent.parent / "__init__.py").resolve()
 module_name = "bbam"
 
 # Load and run bbam
-spec = importlib.util.spec_from_file_location(module_name, bbam_path)
-module = importlib.util.module_from_spec(spec)
+spec = importlib.util.spec_from_file_location(module_name, str(bbam_path))
+if spec is None or spec.loader is None:
+    raise ImportError(f"Cannot load spec or loader for {module_name} from {bbam_path}")
+module = importlib.util.module_from_spec(spec)  # type: ignore
 sys.modules[module_name] = module
 spec.loader.exec_module(module)
-module.install_from_blender()
 
+# VS Code Type Checking
+import typing
+if typing.TYPE_CHECKING:
+    import bbam
+    module: bbam  # type: ignore
 
-# Instructions for running this script from Blender
-'''
-# Run this script in Blender to generate and install the addon build.
-# Ensure the paths in `addon_directories` point to the correct addon directories.
-# For more details, visit the GitHub repository: https://github.com/xavier150/BBAM
+module.install_from_blender(current_only=current_only)
 
-import os
-import importlib.util
-
-# List of addon paths using BBAM
-addon_directories = [
-    # Uncomment and adjust paths as needed
-    r"P:/GitHubBlenderAddon/Blender-For-UnrealEngine-Addons/blender-for-unrealengine",
-    # r"M:/MMVS_ProjectFiles/Other/BlenderForMMVS",
-    # r"P:/GitHubBlenderAddon/Modular-Auto-Rig/modular-auto-rig",
-]
-
-for dir in addon_directories:
-    # Install or reinstall the addon
-    script_path = os.path.join(dir, "bbam/exec/install_from_blender.py")
-    spec = importlib.util.spec_from_file_location("install_from_blender", script_path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-'''
