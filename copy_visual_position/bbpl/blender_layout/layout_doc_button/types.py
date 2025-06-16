@@ -33,7 +33,7 @@ class CustomOpenTargetWebPage_Operator(bpy.types.Operator):
     bl_label = "Documentation"
     bl_idname = utils.get_open_target_web_page_idname()
     bl_description = "Click for open URL."
-    url: bpy.props.StringProperty(default="https://github.com/xavier150/BleuRavenBlenderPythonLibrary")
+    url: bpy.props.StringProperty(default="https://github.com/xavier150/BleuRavenBlenderPythonLibrary")  # type: ignore
 
     def execute(self, context):
         # Check if the URL starts with http:// or https://

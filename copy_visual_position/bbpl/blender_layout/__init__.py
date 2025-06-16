@@ -49,7 +49,7 @@ classes = (
 
 def register():
     for cls in classes:
-        bpy.utils.register_class(cls)
+        bpy.utils.register_class(cls)  # type: ignore
 
     layout_accordion.register()
     layout_template_list.register()
@@ -58,7 +58,7 @@ def register():
 
 def unregister():
     for cls in reversed(classes):
-        bpy.utils.unregister_class(cls)
+        bpy.utils.unregister_class(cls)  # type: ignore
 
     layout_selector.unregister()
     layout_doc_button.unregister()

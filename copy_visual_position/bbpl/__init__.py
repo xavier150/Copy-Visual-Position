@@ -77,7 +77,7 @@ classes = (
 
 def register():
     for cls in classes:
-        bpy.utils.register_class(cls)
+        bpy.utils.register_class(cls)  # type: ignore
 
     blender_layout.register()
     backward_compatibility.register()
@@ -87,7 +87,7 @@ def register():
 
 def unregister():
     for cls in reversed(classes):
-        bpy.utils.unregister_class(cls)
+        bpy.utils.unregister_class(cls)  # type: ignore
 
     blender_addon.unregister()
     blender_rig.unregister()

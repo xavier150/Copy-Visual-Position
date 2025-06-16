@@ -22,6 +22,4 @@
 #  XavierLoux.com
 # ----------------------------------------------
 
-import bpy
-
 from ... import __internal__

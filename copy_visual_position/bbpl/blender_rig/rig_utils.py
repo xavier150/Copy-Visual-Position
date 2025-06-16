@@ -24,15 +24,19 @@
 
 import bpy
 import mathutils
+from typing import Optional
 from .. import utils
 
 
-def create_safe_bone(arm, bone_name, context_id=None):
+def create_safe_bone(arm, bone_name, context_id=None) -> Optional[bpy.types.EditBone]:
     """
     Create a bone in the armature.
     Blender 4.0 -> context_id is the bone collection name.
     Blender 3.6 and older -> context_id is the bone layer index.
     """
+
+    if bpy.context is None:
+        return None
 
     if bone_name in arm.data.edit_bones:
         print("Bone already exists! : " + bone_name)
@@ -50,7 +54,7 @@ def create_safe_bone(arm, bone_name, context_id=None):
         if bpy.app.version >= (4, 0, 0):
             add_bone_to_collection(arm, bone_name, context_id)
         else:
-            change_current_layer(0, bpy.context.object.data)
+            change_current_layer(0, bpy.context.object.data)  # type: ignore
             change_current_layer(context_id, bone)
 
     return bone
@@ -138,7 +142,7 @@ if bpy.app.version >= (4, 0, 0):
         col.assign(bone)
         return col
 
-    def remove_bone_from_collection(arm, bone_name, collection_name) -> bpy.types.BoneCollection:
+    def remove_bone_from_collection(arm, bone_name, collection_name) -> Optional[bpy.types.BoneCollection]:
         #Remove bone from collection.
         if bpy.app.version >= (4, 1, 0):
             # Need to use collections_all for include all collections childs.
@@ -154,65 +158,71 @@ if bpy.app.version >= (4, 0, 0):
                 col.unassign(bone)
                 return col
 
-def change_current_layer(layer, source):
-    """
-    Change the current active layer to the specified layer.
-    """
-    source.layers[layer] = True
-    for i in range(0, 32):
-        if i != layer:
-            source.layers[i] = False
+if bpy.app.version <= (3, 6, 0):
 
-def change_select_layer(layer):
-    """
-    Change the active bone layer in the armature to the specified layer.
-    """
-    layer_values = [layer == i for i in range(32)]
-    bpy.ops.armature.bone_layers(layers=layer_values)
+    def change_current_layer(layer, source):
+        """
+        Change the current active layer to the specified layer.
+        Deprecated in new version of Blender.
+        """
+        source.layers[layer] = True
+        for i in range(0, 32):
+            if i != layer:
+                source.layers[i] = False
 
-def change_user_view_layer(layer):
-    """
-    Change the active layer in the user view to the specified layer.
-    """
-    change_current_layer(layer, bpy.context.object.data)
+    def change_select_layer(layer):
+        """
+        Change the active bone layer in the armature to the specified layer.
+        Deprecated in new version of Blender.
+        """
+        layer_values = [layer == i for i in range(32)]
+        bpy.ops.armature.bone_layers(layers=layer_values)  # type: ignore
 
-def duplicate_rig_layer(armature, original_layer, new_layer, old_prefix, new_prefix):
-    """
-    Duplicates the bones in the specified original layer of the armature and moves them to the new layer.
-    The bone names are modified by replacing the old prefix with the new prefix.
+    def change_user_view_layer(layer):
+        """
+        Change the active layer in the user view to the specified layer.
+        Deprecated in new version of Blender.
+        """
+        change_current_layer(layer, bpy.context.object.data)  # type: ignore
 
-    Args:
-        armature (bpy.types.Object): The armature object.
-        original_layer (int): The original layer index.
-        new_layer (int): The new layer index.
-        old_prefix (str): The old prefix to replace in bone names.
-        new_prefix (str): The new prefix to use in bone names.
+    def duplicate_rig_layer(armature, original_layer, new_layer, old_prefix, new_prefix):
+        """
+        Deprecated in new version of Blender.
+        Duplicates the bones in the specified original layer of the armature and moves them to the new layer.
+        The bone names are modified by replacing the old prefix with the new prefix.
 
-    Returns:
-        list: A list of the names of the duplicated bones.
-    """
+        Args:
+            armature (bpy.types.Object): The armature object.
+            original_layer (int): The original layer index.
+            new_layer (int): The new layer index.
+            old_prefix (str): The old prefix to replace in bone names.
+            new_prefix (str): The new prefix to use in bone names.
 
-    utils.safe_mode_set(armature, "EDIT")  # Set the armature to edit mode safely
-    # Change the current active layer to the original layer
-    change_current_layer(original_layer, bpy.context.object.data)
-    bpy.ops.armature.select_all(action='SELECT')  # Select all bones
-    bpy.ops.armature.duplicate()  # Duplicate the selected bones
-    change_select_layer(new_layer)  # Move the duplicated bones to the new layer
-    change_user_view_layer(new_layer)  # Set the user view to the new layer
+        Returns:
+            list: A list of the names of the duplicated bones.
+        """
 
-    new_bone_names  = []
-    for bone in bpy.context.selected_bones:
-        new_bone_names .append(bone.name)
+        utils.safe_mode_set(armature, "EDIT")  # Set the armature to edit mode safely  # type: ignore
+        # Change the current active layer to the original layer
+        change_current_layer(original_layer, bpy.context.object.data)  # type: ignore
+        bpy.ops.armature.select_all(action='SELECT')  # Select all bones
+        bpy.ops.armature.duplicate()  # Duplicate the selected bones
+        change_select_layer(new_layer)  # Move the duplicated bones to the new layer
+        change_user_view_layer(new_layer)  # Set the user view to the new layer
 
-    armature.data.pose_position = 'REST'  # Set the pose position to rest
-    utils.safe_mode_set(armature, "OBJECT")  # Set the armature to object mode safely
-    for bone_name in new_bone_names:
-        new_bone_name = get_name_with_new_prefix(bone_name, old_prefix, new_prefix)  # Modify the bone name
-        new_bone_name = no_num(new_bone_name)  # Remove the number index from the bone name
-        armature.data.bones[bone_name].name = new_bone_name  # Rename the bone
+        new_bone_names  = []
+        for bone in bpy.context.selected_bones:  # type: ignore
+            new_bone_names .append(bone.name)
 
-    armature.data.pose_position = 'POSE'  # Set the pose position back to pose mode
-    return new_bone_names
+        armature.data.pose_position = 'REST'  # Set the pose position to rest
+        utils.safe_mode_set(armature, "OBJECT")  # Set the armature to object mode safely  # type: ignore
+        for bone_name in new_bone_names:
+            new_bone_name = get_name_with_new_prefix(bone_name, old_prefix, new_prefix)  # Modify the bone name
+            new_bone_name = no_num(new_bone_name)  # Remove the number index from the bone name
+            armature.data.bones[bone_name].name = new_bone_name  # Rename the bone
+
+        armature.data.pose_position = 'POSE'  # Set the pose position back to pose mode
+        return new_bone_names
 
 
 class Orig_prefixhanBone():

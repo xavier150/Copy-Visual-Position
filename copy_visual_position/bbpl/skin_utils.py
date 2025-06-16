@@ -24,55 +24,58 @@
 
 
 import bpy
+from typing import List, Dict
 from .. import bbpl
 
-def save_defoms_bones(armature):
+def save_defoms_bones(armature: bpy.types.Object) -> Dict[str, bool]:
     """
     Save the deform flag for each bone in the armature.
-    Returns a list of bone names and their deform flags.
+    Returns a dictionary of bone names and their deform flags.
     """
-    saved_bones = []
-    for bone in armature.data.bones:
-        saved_bones.append([bone.name, bone.use_deform])
+    saved_bones: Dict[str, bool] = {}
+
+    for bone in armature.data.bones:  # type: ignore
+        saved_bones[bone.name] = bone.use_deform  # type: ignore
     return saved_bones
 
 
-def reset_deform_bones(armature, saved_bones):
+def reset_deform_bones(armature: bpy.types.Object, saved_bones: Dict[str, bool]) -> None:
     """
     Reset the deform flags for each bone in the armature using the saved data.
     """
-    for bones in saved_bones:
-        armature.data.bones[bones[0]].use_deform = bones[1]
+    for bone_name, use_deform in saved_bones.items():
+        armature.data.bones[bone_name].use_deform = use_deform  # type: ignore
 
 
-def set_all_bones_deforms(armature, use_deform):
+def set_all_bones_deforms(armature: bpy.types.Object, use_deform: bool) -> None:
     """
     Set the deform flag for all bones in the armature.
     """
-    for bone in armature.data.bones:
+    for bone in armature.data.bones:  # type: ignore
         bone.use_deform = use_deform
 
 
-def set_bones_deforms(armature, bone_name_list, use_deform):
+def set_bones_deforms(armature: bpy.types.Object, bone_name_list: List[str], use_deform: bool) -> None:
     """
     Set the deform flag for the specified bones in the armature.
     """
-    bone_list = []
+    bone_list: List[bpy.types.Bone] = []
     for bone_name in bone_name_list:
-        bone_list.append(armature.data.bones[bone_name])
+        if bone_name in armature.data.bones:  # type: ignore
+            bone_list.append(armature.data.bones[bone_name])  # type: ignore
     for bone in bone_list:
         bone.use_deform = use_deform
 
 
-def remove_vertex_groups(obj):
+def remove_vertex_groups(obj: bpy.types.Object) -> None:
     """
     Remove all vertex groups from the object.
     """
     for vertex_group in obj.vertex_groups:
-        obj.vertex_groups.remove(vertex_group)
+        obj.vertex_groups.remove(vertex_group)  # type: ignore
 
 
-def copy_rig_group(obj, source):
+def copy_rig_group(obj: bpy.types.Object, source: bpy.types.Object) -> None:
     """
     Copy the rigging weights from the source object to the target object.
     """
@@ -82,22 +85,29 @@ def copy_rig_group(obj, source):
 
     for old_mod in obj.modifiers:
         if old_mod.name == mod_name:
-            obj.modifiers.remove(old_mod)
+            obj.modifiers.remove(old_mod)  # type: ignore
 
     remove_vertex_groups(obj)
 
-    mod = obj.modifiers.new(name=mod_name, type='DATA_TRANSFER')
+    mod = obj.modifiers.new(name=mod_name, type='DATA_TRANSFER')  # type: ignore
     while obj.modifiers[0].name != mod_name:
-        bpy.ops.object.modifier_move_up(modifier=mod_name)
-
-    mod.object = source
-    mod.use_vert_data = True
-    mod.data_types_verts = {'VGROUP_WEIGHTS'}
-    bpy.ops.object.datalayout_transfer(modifier=mod_name, data_type="VGROUP_WEIGHTS")
-    bpy.ops.object.modifier_apply(modifier=mod_name)
+        bpy.ops.object.modifier_move_up(modifier=mod_name)  # type: ignore
 
 
-def apply_auto_rig_parent(armature, target_objects, parent_type='ARMATURE_AUTO', white_list_bones=[], black_list_bones=[]):
+    mod.object = source  # type: ignore
+    mod.use_vert_data = True  # type: ignore
+    mod.data_types_verts = {'VGROUP_WEIGHTS'}  # type: ignore
+    bpy.ops.object.datalayout_transfer(modifier=mod_name, data_type="VGROUP_WEIGHTS")  # type: ignore
+    bpy.ops.object.modifier_apply(modifier=mod_name)  # type: ignore
+
+
+def apply_auto_rig_parent(
+    armature: bpy.types.Object, 
+    target_objects: List[bpy.types.Object], 
+    parent_type: str = 'ARMATURE_AUTO', 
+    white_list_bones: List[str] = [], 
+    black_list_bones: List[str] = []
+) -> None:
     """
     Apply an automatic rig parent to the target object using the armature.
     Optionally, specify a white list or black list of bones to control the deform flag.
@@ -113,23 +123,24 @@ def apply_auto_rig_parent(armature, target_objects, parent_type='ARMATURE_AUTO',
 
     for obj in target_objects:
         for modifier in obj.modifiers:
-            if modifier.type == "ARMATURE":
-                obj.modifiers.remove(modifier)
+            modifier: bpy.types.Modifier
+            if modifier.type == "ARMATURE":  # type: ignore
+                obj.modifiers.remove(modifier)  # type: ignore
         remove_vertex_groups(obj)
-    
-    all_objs = []
+
+    all_objs: List[bpy.types.Object] = []
     all_objs.append(armature)
     all_objs.extend(target_objects)
     if bpy.app.version >= (4, 0, 0):
-        with bpy.context.temp_override(active_object=armature, object=armature, selected_objects=all_objs, selected_editable_objects=all_objs):
-            bpy.ops.object.parent_set(type=parent_type)
+        with bpy.context.temp_override(active_object=armature, object=armature, selected_objects=all_objs, selected_editable_objects=all_objs):  # type: ignore
+            bpy.ops.object.parent_set(type=parent_type)  # type: ignore
 
     else:
-        override_context = bpy.context.copy()
+        override_context = bpy.context.copy()  # type: ignore
         override_context['active_object'] = armature
         override_context['object'] = armature
         override_context['selected_objects'] = all_objs
-        bpy.ops.object.parent_set(override_context, type=parent_type)
+        bpy.ops.object.parent_set(override_context, type=parent_type)  # type: ignore
 
 
     reset_deform_bones(armature, save_defom)

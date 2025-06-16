@@ -24,7 +24,7 @@
 
 import bpy
 import mathutils
-from typing import List
+from typing import List, Optional
 from . import scene_utils
 from . import utils
 
@@ -73,7 +73,7 @@ class NLA_Save:
         if target is None or target.animation_data is None:
             return
 
-        for nla_track in self.nla_tracks_save:
+        for nla_track in self.nla_tracks_save: # type: ignore
             new_nla_track = target.animation_data.nla_tracks.new()
             nla_track.paste_data_on(new_nla_track)
 
@@ -136,19 +136,19 @@ class ProxyCopy_NlaStrip:
     """
 
     def __init__(self, nla_strip: bpy.types.NlaStrip):
-        self.action = nla_strip.action
-        self.action_frame_end = nla_strip.action_frame_end
-        self.action_frame_start = nla_strip.action_frame_start
-        self.active = nla_strip.active
-        self.blend_in = nla_strip.blend_in
-        self.blend_out = nla_strip.blend_out
-        self.blend_type = nla_strip.blend_type
-        self.extrapolation = nla_strip.extrapolation
+        self.action: Optional[bpy.types.Action] = nla_strip.action
+        self.action_frame_end: float = nla_strip.action_frame_end
+        self.action_frame_start: float = nla_strip.action_frame_start
+        self.active: Optional[bool] = nla_strip.active
+        self.blend_in: float = nla_strip.blend_in
+        self.blend_out: float = nla_strip.blend_out
+        self.blend_type: str = nla_strip.blend_type
+        self.extrapolation: str = nla_strip.extrapolation
         self.fcurves: List[ProxyCopy_StripFCurve] = []
         # Since 3.5 interact to a NlaStripFCurves not linked to an object produce Blender Crash.
         for fcurve in nla_strip.fcurves:
             self.fcurves.append(ProxyCopy_StripFCurve(fcurve))
-        self.frame_end = nla_strip.frame_end
+        self.frame_end: float = nla_strip.frame_end
         if bpy.app.version >= (3, 3, 0):
             self.frame_end_ui = nla_strip.frame_end_ui
         self.frame_start = nla_strip.frame_start
@@ -189,7 +189,7 @@ class ProxyCopy_NlaStrip:
             nla_strip.use_auto_blend = self.use_auto_blend
         nla_strip.blend_in = self.blend_in
         nla_strip.blend_out = self.blend_out
-        nla_strip.blend_type = self.blend_type
+        nla_strip.blend_type = self.blend_type  # type: ignore
 
         # Strip Time
         if bpy.app.version >= (3, 0, 0):
@@ -211,7 +211,7 @@ class ProxyCopy_NlaStrip:
         nla_strip.scale = self.scale
 
         # nla_strip.active = self.active
-        nla_strip.extrapolation = self.extrapolation
+        nla_strip.extrapolation = self.extrapolation  # type: ignore
         nla_strip.frame_end = self.frame_end
         if bpy.app.version >= (3, 3, 0):
             nla_strip.frame_end_ui = self.frame_end_ui
@@ -236,7 +236,7 @@ class ProxyCopy_StripFCurve():
     It is used to safely copy the bpy.types.NlaStripFCurves struct.
     """
 
-    def __init__(self, fcurve: bpy.types.NlaStripFCurves):
+    def __init__(self, fcurve: bpy.types.FCurve):
         self.data_path = fcurve.data_path
         self.keyframe_points: List[ProxyCopy_Keyframe] = []
         for keyframe_point in fcurve.keyframe_points:
@@ -357,9 +357,9 @@ def copy_fcurve_attr(a :bpy.types.FCurve, b :bpy.types.FCurve, print_fails = Tru
 
     copy_attributes(a, b, priority_vars, ignore_list, print_fails)
 
-def copy_modifier_attr(a :bpy.types.FModifierGenerator, b :bpy.types.FModifierGenerator, print_fails = True):
-    if not isinstance(a, bpy.types.FModifierGenerator) or not isinstance(b, bpy.types.FModifierGenerator):
-        raise TypeError(f"Expected 'bpy.types.FModifierGenerator', but got {type(a).__name__} and {type(b).__name__}")
+def copy_modifier_attr(a :bpy.types.FModifier, b :bpy.types.FModifier, print_fails = True):
+    if not isinstance(a, bpy.types.FModifier) or not isinstance(b, bpy.types.FModifier):
+        raise TypeError(f"Expected 'bpy.types.FModifier', but got {type(a).__name__} and {type(b).__name__}")
     priority_vars = []
     ignore_list = [
         'type',
@@ -517,8 +517,8 @@ class AnimationManagment():
                 if obj.animation_data.action: 
                     obj.animation_data.action_slot = self.action_slot
 
-            obj.animation_data.action_extrapolation = self.action_extrapolation
-            obj.animation_data.action_blend_type = self.action_blend_type
+            obj.animation_data.action_extrapolation = self.action_extrapolation  # type: ignore
+            obj.animation_data.action_blend_type = self.action_blend_type  # type: ignore
             obj.animation_data.action_influence = self.action_influence
 
             if copy_nla:
@@ -546,7 +546,7 @@ def reset_armature_pose(obj: bpy.types.Object):
     """
     for b in obj.pose.bones:
         b.rotation_quaternion = mathutils.Quaternion()
-        b.rotation_euler = mathutils.Vector((0, 0, 0))
+        b.rotation_euler = mathutils.Euler((0, 0, 0))
         b.scale = mathutils.Vector((1, 1, 1))
         b.location = mathutils.Vector((0, 0, 0))
 

@@ -222,7 +222,7 @@ class SkinWeightMeshUpdater:
                 vg_new = obj.vertex_groups.new(name=new_name)
 
             # Copy vertex weights from the old group to the new group
-            for vert in obj.data.vertices:
+            for vert in obj.data.vertices:  # type: ignore
                 for group in vert.groups:
                     if group.group == vg_old.index:
                         vg_new.add([vert.index], group.weight, 'REPLACE')

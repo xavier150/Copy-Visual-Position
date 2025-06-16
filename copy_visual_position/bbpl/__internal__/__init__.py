@@ -22,7 +22,6 @@
 #  XavierLoux.com
 # ----------------------------------------------
 
-import bpy
 import importlib
 from . import utils
 

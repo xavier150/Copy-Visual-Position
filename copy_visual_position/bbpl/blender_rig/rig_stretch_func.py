@@ -22,7 +22,6 @@
 #  XavierLoux.com
 # ----------------------------------------------
 
-import bpy
-import mathutils
+
 
 # TO DO

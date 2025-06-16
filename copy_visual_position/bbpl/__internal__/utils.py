@@ -23,7 +23,7 @@
 # ----------------------------------------------
 
 import bpy
-from ... import __package__ as base_package
+from ... import __package__ as base_package # type: ignore
 
 def get_package_name():
     # Before 4.2 __package__ will look like that: 

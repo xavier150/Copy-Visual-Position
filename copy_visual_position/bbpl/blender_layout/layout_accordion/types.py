@@ -25,12 +25,13 @@
 import bpy
 import re
 
+from typing import Tuple, Union
 from . import utils
 from .. import layout_utils
 from ... import __internal__
 
 class CustomAccordionUI_PropertyGroup(bpy.types.PropertyGroup):
-    expend: bpy.props.BoolProperty(
+    expend: bpy.props.BoolProperty(  # type: ignore
         name="Use",
         description="Click to expand / collapse",
         default=False,
@@ -45,13 +46,16 @@ class CustomAccordionUI_PropertyGroup(bpy.types.PropertyGroup):
         # Use panel_prop() was added only in Blender 4.1 and work on UI region.type only.
         # The BBPL one work since Blender 2.8 on any regions.
 
+        if bpy.context is None:
+            return False
+
         if bpy.app.version >= (4, 1, 0):
             if bpy.context.region.type == "UI":
                 return True
         return False
 
 
-    def draw(self, layout: bpy.types.UILayout, text = None):
+    def draw(self, layout: bpy.types.UILayout, text = None) -> Tuple[bpy.types.UILayout, Union[bpy.types.UILayout, None]]:
         """Similar to layout.panel_prop(...) Use panel_prop() in Blender 4.1 and new versions.
                 :param layout: layout body
                 :type layout: bpy.types.UILayout

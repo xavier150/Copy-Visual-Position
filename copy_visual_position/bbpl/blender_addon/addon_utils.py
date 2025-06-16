@@ -24,30 +24,29 @@
 
 
 import os
-import bpy
 import addon_utils
 from .. import __internal__
 
 
-def get_addon_version(addon_name):
+def get_addon_version(addon_name: str) -> tuple[int, int, int]:
     version = (0, 0, 0)
-    for mod in addon_utils.modules():
-        if mod.bl_info['name'] == addon_name:
-            return mod.bl_info.get('version', (0, 0, 0))
+    for mod in addon_utils.modules():  # type: ignore
+        if mod.bl_info['name'] == addon_name:  # type: ignore
+            return mod.bl_info.get('version', (0, 0, 0))  # type: ignore
     return version
 
-def get_addon_version_str(addon_name):
+def get_addon_version_str(addon_name: str) -> str:
     version = get_addon_version(addon_name)
     return '.'.join([str(x) for x in version])
 
-def get_addon_file(addon_name):
-    for mod in addon_utils.modules():
-        if mod.bl_info['name'] == addon_name:
-            return mod.__file__
+def get_addon_file(addon_name: str) -> str:
+    for mod in addon_utils.modules():  # type: ignore
+        if mod.bl_info['name'] == addon_name:  # type: ignore
+            return mod.__file__  # type: ignore
     return "Not Found"
 
-def get_addon_path(addon_name):
-    for mod in addon_utils.modules():
-        if mod.bl_info['name'] == addon_name:
-            return os.path.dirname(mod.__file__)
+def get_addon_path(addon_name: str) -> str:
+    for mod in addon_utils.modules():  # type: ignore
+        if mod.bl_info['name'] == addon_name:  # type: ignore
+            return os.path.dirname(mod.__file__)  # type: ignore
     return "Not Found"

@@ -29,10 +29,10 @@ import bpy
 import bmesh
 import addon_utils
 import pathlib
-from typing import Optional
+from typing import Optional, List, Any
 
 
-def check_plugin_is_activated(plugin_name):
+def check_plugin_is_activated(plugin_name: str) -> bool:
     """
     Checks if a Blender plugin is activated.
 
@@ -42,11 +42,13 @@ def check_plugin_is_activated(plugin_name):
     Returns:
         bool: True if the plugin is enabled and loaded, False otherwise.
     """
-    is_enabled, is_loaded = addon_utils.check(plugin_name)
-    return is_enabled and is_loaded
+    is_enabled: bool
+    is_loaded: bool
+    is_enabled, is_loaded = addon_utils.check(plugin_name)  # type: ignore
+    return is_enabled and is_loaded  # type: ignore
 
 
-def checks_relationship(arrayA, arrayB):
+def checks_relationship(arrayA: List[Any], arrayB: List[Any]) -> bool:
     """
     Checks if there is an identical variable between two lists.
 
@@ -65,7 +67,7 @@ def checks_relationship(arrayA, arrayB):
     return False
 
 
-def remove_folder_tree(folder):
+def remove_folder_tree(folder: str) -> None:
     """
     Removes a folder and its entire directory tree.
 
@@ -80,7 +82,7 @@ def remove_folder_tree(folder):
         shutil.rmtree(dirig_prefixath, ignore_errors=True)
 
 
-def get_childs(obj):
+def get_childs(obj: bpy.types.Object) -> List[bpy.types.Object]:
     """
     Retrieves all direct children of an object.
 
@@ -90,38 +92,20 @@ def get_childs(obj):
     Returns:
         list: A list of direct children objects.
     """
+    if bpy.context is None:
+        return []
+
     scene = bpy.context.scene
-    childs_obj = []
+    childs_obj: List[bpy.types.Object] = []
     for child_obj in scene.objects:
-        if child_obj.library is None:
+        # Only include objects that are not linked from external libraries
+        if not child_obj.library:
             parent = child_obj.parent
             if parent is not None:
                 if parent.name == obj.name:
                     childs_obj.append(child_obj)
 
     return childs_obj
-
-
-def get_armature_root_bone(obj):
-    """
-    Retrieves the root bone of an armature object.
-
-    Args:
-        obj (bpy.types.Object): The armature object to find the root bone for.
-
-    Returns:
-        bpy.types.Bone: The root bone of the armature, or None if not found.
-    """
-    # Vérifie si l'objet est une armature et s'il a des données d'armature
-    if obj.type == 'ARMATURE' and obj.data:
-        armature = obj.data
-        
-        # Parcours tous les os de l'armature pour trouver le(s) root(s)
-        for bone in armature.bones:
-            if bone.parent is None:
-                return bone
-    return None
-
 
 def get_armature_root_bone(obj: bpy.types.Object) -> Optional[bpy.types.Bone]:
     """
@@ -136,7 +120,7 @@ def get_armature_root_bone(obj: bpy.types.Object) -> Optional[bpy.types.Bone]:
     if obj.type == 'ARMATURE' and obj.data:
         armature = obj.data
         
-        for bone in armature.bones:
+        for bone in armature.bones:  # type: ignore
             if bone.parent is None:
                 return bone
     return None
@@ -174,7 +158,7 @@ def get_first_deform_bone_parent(bone: bpy.types.Bone) -> Optional[bpy.types.Bon
     return bone if bone.use_deform else None
 
 
-def get_recursive_childs(target_obj):
+def get_recursive_childs(target_obj: bpy.types.Object) -> List[bpy.types.Object]:
     """
     Retrieves all recursive children of an object.
 
@@ -184,6 +168,9 @@ def get_recursive_childs(target_obj):
     Returns:
         list: A list of recursive children objects.
     """
+    if bpy.context is None:
+        return []
+
     def get_recursive_parent(parent, start_obj):
         if start_obj.parent:
             if start_obj.parent == parent:
@@ -201,7 +188,7 @@ def get_recursive_childs(target_obj):
     return save_objs
 
 
-def convert_to_convex_hull(obj):
+def convert_to_convex_hull(obj: bpy.types.Object) -> None:
     """
     Converts an object to a convex hull.
 
@@ -212,16 +199,16 @@ def convert_to_convex_hull(obj):
         None
     """
     mesh = obj.data
-    if not mesh.is_editmode:
+    if not mesh.is_editmode: # type: ignore
         bm = bmesh.new()
-        bm.from_mesh(mesh)  # Mesh to Bmesh
-        bmesh.ops.convex_hull(bm, input=bm.verts, use_existing_faces=True)
+        bm.from_mesh(mesh)  # Mesh to Bmesh # type: ignore
+        bmesh.ops.convex_hull(bm, input=bm.verts, use_existing_faces=True) # type: ignore
         # convex_hull = bmesh.ops.convex_hull(bm, input=bm.verts, use_existing_faces=True)
         # convex_hull = bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-        bm.to_mesh(mesh)  # BMesh to Mesh
+        bm.to_mesh(mesh)  # BMesh to Mesh # type: ignore
 
 
-def verify_dirs(directory):
+def verify_dirs(directory: str) -> None:
     """
     Checks if a directory exists and creates it if it doesn't.
 
@@ -235,7 +222,7 @@ def verify_dirs(directory):
         os.makedirs(directory)
 
 
-def valid_filename(filename):
+def valid_filename(filename: str) -> str:
     """
     Normalizes a string by removing non-alphanumeric characters for file name use.
 
@@ -250,7 +237,7 @@ def valid_filename(filename):
     return filename
 
 
-def valid_defname(filename):
+def valid_defname(filename: str) -> str:
     """
     Normalizes a string by removing non-alphanumeric characters for function name use.
 
@@ -265,7 +252,7 @@ def valid_defname(filename):
     return filename
 
 
-def get_if_action_is_associated(action, bone_names):
+def get_if_action_is_associated(action: bpy.types.Action, bone_names: List[str]) -> bool:
     """
     Checks if the given action is associated with any of the specified bone names.
 
@@ -288,7 +275,7 @@ def get_if_action_is_associated(action, bone_names):
     return False
 
 
-def get_surface_area(obj):
+def get_surface_area(obj: bpy.types.Object) -> float:
     """
     Computes the surface area of a mesh object.
 
@@ -299,13 +286,13 @@ def get_surface_area(obj):
         float: The surface area of the mesh object.
     """
     bm = bmesh.new()
-    bm.from_mesh(obj.data)
+    bm.from_mesh(obj.data) # type: ignore
     area = sum(f.calc_area() for f in bm.faces)
     bm.free()
     return area
 
 
-def set_windows_clipboard(text):
+def set_windows_clipboard(text: str):
     """
     Sets the text content to the clipboard.
 
@@ -315,14 +302,17 @@ def set_windows_clipboard(text):
     Returns:
         None
     """
-    bpy.context.window_manager.clipboard = text
+    bpy.context.window_manager.clipboard = text # type: ignore
     # bpy.context.window_manager.clipboard.encode('utf8')
 
-def get_obj_childs(obj):
+def get_obj_childs(obj: bpy.types.Object) -> List[bpy.types.Object]:
     # Get all direct childs of a object
 
+    if bpy.context is None:
+        return []
+
     scene = bpy.context.scene
-    childs_obj = []
+    childs_obj: List[bpy.types.Object] = []
     for childObj in scene.objects:
         if childObj.library is None:
             pare = childObj.parent
@@ -332,15 +322,18 @@ def get_obj_childs(obj):
 
     return childs_obj
 
-def get_recursive_obj_childs(obj, include_self = False):
+def get_recursive_obj_childs(obj: bpy.types.Object, include_self: bool = False) -> List[bpy.types.Object]:
     # Get all recursive childs of a object
     # include_self is True obj is index 0
 
-    saveObjs = []
+    if bpy.context is None:
+        return []
+
+    save_objects: List[bpy.types.Object] = []
 
     def tryAppend(obj):
-        if obj.name in bpy.context.scene.objects:
-            saveObjs.append(obj)
+        if obj.name in bpy.context.scene.objects:  # type: ignore
+            save_objects.append(obj)
 
     if include_self:
         tryAppend(obj)
@@ -349,4 +342,4 @@ def get_recursive_obj_childs(obj, include_self = False):
         for childs in get_recursive_obj_childs(newobj):
             tryAppend(childs)
         tryAppend(newobj)
-    return saveObjs
+    return save_objects

@@ -23,21 +23,8 @@
 # ----------------------------------------------
 
 
-import bpy
 
-
-def layout_scene_section(layout, prop_name, prop_label):
-    """
-    Add a collapsible section in the Blender UI layout for a scene property.
-    """
-    scene = bpy.context.scene
-    expanded = getattr(scene, prop_name) #Old expanded = eval("scene." + prop_name)
-    tria_icon = "TRIA_DOWN" if expanded else "TRIA_RIGHT"
-    layout.row().prop(scene, prop_name, icon=tria_icon, icon_only=True, text=prop_label, emboss=False)
-    return expanded
-
-
-def get_icon_by_group_theme(theme_enum):
+def get_icon_by_group_theme(theme_enum: str) -> str:
     """
     Get the icon name based on a group theme enum value.
     """

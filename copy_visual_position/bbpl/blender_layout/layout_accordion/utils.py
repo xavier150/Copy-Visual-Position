@@ -22,10 +22,8 @@
 #  XavierLoux.com
 # ----------------------------------------------
 
-import bpy
-
 from ... import __internal__
 
 def get_class_name():
-    return __internal__.utils.get_layout_ui_class_name("_accordion")
+    return __internal__.utils.get_layout_ui_class_name("_accordion")  # type: ignore
 

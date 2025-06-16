@@ -23,8 +23,9 @@
 # ----------------------------------------------
 
 import bpy
+from typing import Union
 
-def get_property_name_from_property_group(property_group: bpy.types.PropertyGroup, property_group_instance: type):
+def get_property_name_from_property_group(property_group: bpy.types.PropertyGroup, property_group_instance: type) -> str:
     # Attempts to retrieve the property name from a given PropertyGroup instance
     # by inspecting its owner and matching pointers.
     # I not found better waut to get the property name of a property group...
@@ -35,20 +36,19 @@ def get_property_name_from_property_group(property_group: bpy.types.PropertyGrou
         
         prop_id_name = property_group.id_properties_ensure().name
 
-        def try_get_name_from_prop(test_pro_owner):
+        def try_get_name_from_prop(test_pro_owner: Union[bpy.types.Node, bpy.types.PropertyGroup]) -> str | None:
             if hasattr(test_pro_owner, prop_id_name):
                 test_prop = getattr(test_pro_owner, prop_id_name)
                 if isinstance(test_prop, property_group_instance):
                     test_prop: bpy.types.PropertyGroup
-                    if test_prop.as_pointer() == property_group.as_pointer():                                
-                        return test_pro_owner.bl_rna.properties[prop_id_name].name
+                    if test_prop.as_pointer() == property_group.as_pointer():
+                        return test_pro_owner.bl_rna.properties[prop_id_name].name  # type: ignore
             return None
 
         id_data = property_group.id_data
 
         # FOR NODE TREE
         if isinstance(id_data, bpy.types.NodeTree):
-            id_data: bpy.types.NodeTree
 
             # Check all nodes
             for node in id_data.nodes:
@@ -75,14 +75,13 @@ def get_property_name_from_property_group(property_group: bpy.types.PropertyGrou
                             return result
 
         # FOR OBJECT
-        if isinstance(id_data, bpy.types.Object):
+        if isinstance(id_data, bpy.types.Object):  # type: ignore
             id_data: bpy.types.Object
             # @TODO    
 
         # FOR OTHER (Try direct read)
         if prop_id_name in id_data.bl_rna.properties:
-            prop_rna = id_data.bl_rna.properties[prop_id_name]
-            return prop_rna.name
+            return id_data.bl_rna.properties[prop_id_name].name  # type: ignore
         
         # Name not found so return id name
         return prop_id_name
@@ -92,8 +91,7 @@ def get_property_name_from_property_group(property_group: bpy.types.PropertyGrou
         prop_id_name = property_group.path_from_id()
         id_data = property_group.id_data
         if prop_id_name in id_data.bl_rna.properties:
-            prop_rna = id_data.bl_rna.properties[prop_id_name]
-            return prop_rna.name
-        
+            return id_data.bl_rna.properties[prop_id_name].name  # type: ignore
+
         # Name not found so return id name
         return prop_id_name
