@@ -25,9 +25,10 @@
 
 import os
 import bpy
+from typing import Optional
 from ... import __package__ as base_package  # type: ignore
 
-def get_package_version(pkg_idname: str | None = None, repo_module: str = 'user_default') -> str | None:
+def get_package_version(pkg_idname: Optional[str] = None, repo_module: str = 'user_default') -> Optional[str]:
     if bpy.app.version < (4, 2, 0):
         print("Blender extensions are not supported under 4.2. Please use bbpl.blender_addon.addon_utils instead.")
         return None
@@ -53,7 +54,7 @@ def get_package_version(pkg_idname: str | None = None, repo_module: str = 'user_
     
     return version
 
-def get_package_path(pkg_idname: str | None = None, repo_module: str = 'user_default') -> str | None:
+def get_package_path(pkg_idname: Optional[str] = None, repo_module: str = 'user_default') -> Optional[str]:
     if bpy.app.version < (4, 2, 0):
         print("Blender extensions are not supported under 4.2. Please use bbpl.blender_addon.addon_utils instead.")
         return None

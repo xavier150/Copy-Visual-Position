@@ -25,12 +25,13 @@
 
 import re
 import subprocess
+from typing import Optional
 
 def build_extension(
     src: str,
     dst: str,
     blender_executable_path: str
-) -> subprocess.CompletedProcess[str]:
+):
     """
     Builds an extension using Blender's executable with specified source and destination paths.
 
@@ -56,8 +57,8 @@ def build_extension(
     return result
 
 def get_build_file(
-    build_result: subprocess.CompletedProcess[str]
-) -> str | None:
+    build_result
+) -> Optional[str]:
     """
     Extracts the path of the created build file from the build result output.
 
@@ -75,7 +76,7 @@ def get_build_file(
 def validate_extension(
     path: str, 
     blender_executable_path: str
-) -> subprocess.CompletedProcess[str]:
+):
     """
     Validates the built extension using Blender's executable.
 

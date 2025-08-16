@@ -23,7 +23,7 @@
 # ----------------------------------------------
 
 import bpy
-from typing import List
+from typing import List, Optional
 from .. import utils
 
 class UserSelectSave():
@@ -39,7 +39,7 @@ class UserSelectSave():
         self.user_selected_names: List[str] = []
 
         # Stats
-        self.user_mode: str | None = None
+        self.user_mode: Optional[str] = None
 
     def save_current_select(self):
         """
@@ -111,7 +111,7 @@ class UserSelectSave():
         if self.user_mode:
             utils.safe_mode_set(self.user_mode, bpy.ops.object)  # type: ignore
 
-    def get_user_active(self, use_names: bool = False) -> bpy.types.Object | None:
+    def get_user_active(self, use_names: bool = False) -> Optional[bpy.types.Object]:
 
         if bpy.context is None:
             return None

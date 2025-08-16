@@ -24,7 +24,7 @@
 
 
 import bpy
-from typing import List, Dict
+from typing import List, Dict, Any
 from .. import bbpl
 
 def save_defoms_bones(armature: bpy.types.Object) -> Dict[str, bool]:
@@ -136,7 +136,7 @@ def apply_auto_rig_parent(
             bpy.ops.object.parent_set(type=parent_type)  # type: ignore
 
     else:
-        override_context = bpy.context.copy()  # type: ignore
+        override_context: Dict[str, Any] = bpy.context.copy()  # type: ignore
         override_context['active_object'] = armature
         override_context['object'] = armature
         override_context['selected_objects'] = all_objs

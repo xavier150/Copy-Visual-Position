@@ -24,8 +24,7 @@
 # ----------------------------------------------
 
 import os
-import ast
-from typing import Dict, Any
+from typing import Dict, Any, List
 from . import utils
 from .bbam_addon_config.bbam_addon_config_type import BBAM_AddonConfig, BBAM_AddonBuild
 
@@ -57,7 +56,7 @@ def generate_new_bl_info(
 
     return data
 
-def format_bl_info_lines(data: Dict[str, Any]) -> list[str]:
+def format_bl_info_lines(data: Dict[str, Any]) -> List[str]:
     # Format the new `bl_info` dictionary with line breaks and indentation
     new_bl_info_lines = ["bl_info = {"]
     items = list(data.items())
@@ -103,44 +102,77 @@ def update_file_bl_info(
 def search_file_bl_info(
     file_path: str
 ):
+    import re
+    
     with open(file_path, "r") as file:
         content = file.read()
-        tree = ast.parse(content)
 
-    # Locate existing `bl_info` definition
-    for node in tree.body:
-        if isinstance(node, ast.Assign) and any(isinstance(target, ast.Name) and target.id == "bl_info" for target in node.targets):
-            return True
+    # Search for bl_info definition with any indentation using regex
+    pattern = r'^\s*bl_info\s*='
+    if re.search(pattern, content, re.MULTILINE):
+        return True
     return False
 
 def replace_file_bl_info(
     file_path: str, 
     data: Dict[str, Any]
 ) -> bool:
+    import re
+    
     with open(file_path, "r") as file:
-        content = file.read()
-        tree = ast.parse(content)
+        lines = file.readlines()
 
-    # Locate existing `bl_info` definition
+    # Find bl_info definition with any indentation
     start_bl_info = None
     end_bl_info = None
-    for node in tree.body:
-        if isinstance(node, ast.Assign) and any(isinstance(target, ast.Name) and target.id == "bl_info" for target in node.targets):
-            start_bl_info = node.lineno - 1  # Start line of `bl_info`
-            end_bl_info = node.end_lineno  # End line of `bl_info`
+    bl_info_indentation = ""
+    
+    for i, line in enumerate(lines):
+        # Match 'bl_info =' with any amount of whitespace before it
+        match = re.match(r'^(\s*)bl_info\s*=', line)
+        if match:
+            start_bl_info = i
+            bl_info_indentation = match.group(1)  # Capture the indentation
+            
+            # Find the end of the bl_info dictionary
+            brace_count = 0
+            in_bl_info = False
+            for j in range(i, len(lines)):
+                line_content = lines[j]
+                for char in line_content:
+                    if char == '{':
+                        brace_count += 1
+                        in_bl_info = True
+                    elif char == '}' and in_bl_info:
+                        brace_count -= 1
+                        if brace_count == 0:
+                            end_bl_info = j + 1
+                            break
+                if end_bl_info is not None:
+                    break
             break
 
     if start_bl_info is not None and end_bl_info is not None:
-        lines = content.splitlines()
         # Remove the existing `bl_info` block
         del lines[start_bl_info:end_bl_info]
+        
+        # Format new bl_info with the same indentation
+        new_bl_info_lines: List[str] = []
+        bl_info_data = format_bl_info_lines(data)
+        
+        for bl_info_line in bl_info_data:
+            if bl_info_line.strip():  # If line is not empty
+                new_bl_info_lines.append(bl_info_indentation + bl_info_line + "\n")
+            else:
+                new_bl_info_lines.append("\n")
+        
         # Insert the new `bl_info` block at the same position
-        new_bl_info_lines = format_bl_info_lines(data)
-        lines[start_bl_info:start_bl_info] = new_bl_info_lines
+        for i, line in enumerate(new_bl_info_lines):
+            lines.insert(start_bl_info + i, line)
 
         # Write the updated content back to the file
         with open(file_path, "w") as file:
-            file.write("\n".join(lines))
+            file.writelines(lines)
         return True
     return False
 
@@ -148,29 +180,61 @@ def add_new_bl_info(
     file_path: str,
     data: Dict[str, Any]
 ) -> bool:
+    
     with open(file_path, "r") as file:
-        content = file.read()
-        tree = ast.parse(content)
+        lines = file.readlines()
 
-    # Find the line number of the `register` function
-    index_register = None
-    for node in tree.body:
-        if isinstance(node, ast.FunctionDef) and node.name == "register":
-            index_register = node.lineno - 1  # `lineno` starts at 1, so we subtract 1 for zero-based index
-            break
+    # Find the first executable line (import, try, function call, etc.)
+    # Skip comments, empty lines, and docstrings
+    insert_index = 0
+    i = 0
+    
+    while i < len(lines):
+        stripped_line = lines[i].strip()
+        
+        # Skip empty lines and single-line comments
+        if not stripped_line or stripped_line.startswith('#'):
+            i += 1
+            continue
+        
+        # Handle docstrings at the beginning (triple quotes)
+        if stripped_line.startswith('"""') or stripped_line.startswith("'''"):
+            quote_type = '"""' if stripped_line.startswith('"""') else "'''"
+            
+            # Check if it's a single line docstring
+            if stripped_line.count(quote_type) >= 2 and len(stripped_line) > len(quote_type):
+                # Single line docstring, skip it
+                i += 1
+                continue
+            else:
+                # Multi-line docstring, find the end
+                i += 1  # Move to next line
+                while i < len(lines):
+                    if quote_type in lines[i]:
+                        i += 1  # Skip the closing line
+                        break
+                    i += 1
+                continue
+        
+        # This is the first executable line
+        insert_index = i
+        break
 
-    lines = content.splitlines()
-    new_bl_info_lines = format_bl_info_lines(data)
-
-    if index_register is not None:
-        # Insert `bl_info` lines before the `register` function
-        for i, line in enumerate(new_bl_info_lines):
-            lines.insert(index_register + i, line)
-    else:
-        # If `register` is not found, append `bl_info` at the end
-        lines.extend(new_bl_info_lines)
+    # Format bl_info without indentation (at root level)
+    new_bl_info_lines: List[str] = []
+    bl_info_data = format_bl_info_lines(data)
+    
+    for bl_info_line in bl_info_data:
+        new_bl_info_lines.append(bl_info_line + "\n")
+    
+    # Add an extra empty line after bl_info for readability
+    new_bl_info_lines.append("\n")
+    
+    # Insert `bl_info` lines at the determined position
+    for i, line in enumerate(new_bl_info_lines):
+        lines.insert(insert_index + i, line)
 
     # Write the updated content back to the file
     with open(file_path, "w") as file:
-        file.write("\n".join(lines))
+        file.writelines(lines)
     return True

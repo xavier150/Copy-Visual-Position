@@ -24,6 +24,7 @@
 # ----------------------------------------------
 
 import time
+from typing import List
 
 class CounterTimer():
     """
@@ -94,7 +95,7 @@ def get_formatted_time(
     minutes, seconds = divmod(remainder, 60)
 
     if compact:
-        parts: list[str] = []
+        parts: List[str] = []
         if hours:
             parts.append(f"{hours}h")
         if minutes:

@@ -46,7 +46,8 @@ class BBAM_AddonType(Enum):
         else:
             raise ValueError(f"Unknown addon type: {self}")
         
-    def set_from_string(self, value: str) -> 'BBAM_AddonType':
+    @staticmethod
+    def get_from_string(value: str) -> 'BBAM_AddonType':
         if value == "add-on":
             return BBAM_AddonType.ADDON
         elif value == "theme":
@@ -122,8 +123,8 @@ class BBAM_AddonManifest:
         self.report_issue_url = data.get("report_issue_url", "")
         self.documentation_url = data.get("documentation_url", "")
         self.support = data.get("support", "COMMUNITY")
-        
-        self.type.set_from_string(data.get("type", "add-on"))
+
+        self.type = BBAM_AddonType.get_from_string(data.get("type", "add-on"))
         self.tags = data.get("tags", [])
         self.category = data.get("category", "")
         self.license = data.get("license", [])
@@ -151,7 +152,8 @@ class BBAM_GenerateMethod(Enum):
         else:
             raise ValueError(f"Unknown generate method: {self}")
         
-    def set_from_string(self, value: str) -> 'BBAM_GenerateMethod':
+    @staticmethod
+    def get_from_string(value: str) -> 'BBAM_GenerateMethod':
         if value == "EXTENTION_COMMAND":
             return BBAM_GenerateMethod.EXTENTION_COMMAND
         elif value == "SIMPLE_ZIP":
@@ -166,7 +168,7 @@ class BBAM_AddonBuild:
         self.build_id: str = build_id
         self.generate_method: BBAM_GenerateMethod = BBAM_GenerateMethod.EXTENTION_COMMAND
         
-        # Use "LATEST" at tuple[1] to indicate the latest version.
+        # Use "LATEST" at  Tuple[1] to indicate the latest version.
         self.auto_install_range: Tuple[List[int], Union[List[int], str]] = ([0, 0, 0], [0, 0, 0])
         
         self.naming: str = "{Name}-{Version}.zip"
@@ -175,6 +177,7 @@ class BBAM_AddonBuild:
 
         self.exclude_paths: List[str] = []
         self.include_paths: List[str] = []
+        self.hard_modifications: Dict[str, Any] = {}  # For hard modifications in python files
 
         # Minimum supported Blender version - use at least version 4.2.0
         self.blender_version_min: List[int] = [4, 2, 0]
@@ -188,7 +191,7 @@ class BBAM_AddonBuild:
                 return False
 
         # Update required fields
-        self.generate_method.set_from_string(data["generate_method"])
+        self.generate_method = BBAM_GenerateMethod.get_from_string(data["generate_method"])
         self.auto_install_range = (data["auto_install_range"][0], data["auto_install_range"][1])
         
         self.naming = data["naming"]
@@ -198,11 +201,12 @@ class BBAM_AddonBuild:
         # Optional fields
         self.exclude_paths = data.get("exclude_paths", [])
         self.include_paths = data.get("include_paths", [])
+        self.hard_modifications = data.get("hard_modifications", {})
         self.blender_version_min = data.get("blender_version_min", [4, 2, 0])
 
         return True
 
-    def get_version_as_string(self) -> str:
+    def get_min_blender_version_as_string(self) -> str:
         """
         Returns the minimum Blender version as a string in the format "X.Y.Z".
         """

@@ -22,16 +22,20 @@
 #  XavierLoux.com
 # ----------------------------------------------
 
+from typing import Dict, Any
 import bpy
+
 
 def get_use_local_view():
     """
     Check if the user use local view in an area
     """
-    if bpy.context is None:
-        return False
+    context = bpy.context
+    screen = context.screen
+    if screen is None:
+        return
 
-    areas = bpy.context.screen.areas
+    areas = screen.areas
     for area in areas:
         if area.type == 'VIEW_3D':  # type: ignore
             # Check if using local view
@@ -47,11 +51,13 @@ def move_to_global_view():
     Blender 4.0 -> Set localview with context temp_override
     Blender 3.6 and older -> Set localview with custom context override
     """
-    if bpy.context is None:
-        return False
-
     context = bpy.context
-    areas = context.screen.areas
+    screen = context.screen
+    if screen is None:
+        return
+
+    
+    areas = screen.areas
     for area in areas:
         if area.type == 'VIEW_3D':  # type: ignore
             # Check if using local view
@@ -65,7 +71,7 @@ def move_to_global_view():
                                 # switch to global view
                                 bpy.ops.view3d.localview()  # type: ignore
                         else:
-                            override_context = context.copy()  # type: ignore
+                            override_context: Dict[str, Any] = context.copy()  # type: ignore
                             override_context['area'] = area
                             override_context['region'] = region
                             # switch to global view
@@ -87,10 +93,11 @@ def is_tweak_mode():
     Returns:
         bool: True if the scene is in tweak mode, False otherwise.
     """
-    if bpy.context is None:
-        return False
-
-    return bpy.context.scene.is_nla_tweakmode
+    scene = bpy.context.scene
+    if scene is None:
+        return
+    
+    return scene.is_nla_tweakmode
 
 
 def enter_tweak_mode():

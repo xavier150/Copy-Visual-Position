@@ -64,117 +64,94 @@ class Colors:
     END = "\033[0m"
 
 
-@staticmethod
 def black(string: str) -> str:
     """ Returns the string wrapped in black ANSI color codes. """
     return Colors.BLACK + string + Colors.END
 
-@staticmethod
 def red(string: str) -> str:
     """ Returns the string wrapped in red ANSI color codes. """
     return Colors.RED + string + Colors.END
 
-@staticmethod
 def green(string: str) -> str:
     """ Returns the string wrapped in green ANSI color codes. """
     return Colors.GREEN + string + Colors.END
 
-@staticmethod
 def brown(string: str) -> str:
     """ Returns the string wrapped in brown ANSI color codes. """
     return Colors.BROWN + string + Colors.END
 
-@staticmethod
 def blue(string: str) -> str:
     """ Returns the string wrapped in blue ANSI color codes. """    
     return Colors.BLUE + string + Colors.END
 
-@staticmethod
 def purple(string: str) -> str:
     """ Returns the string wrapped in purple ANSI color codes. """
     return Colors.PURPLE + string + Colors.END
 
-@staticmethod
 def cyan(string: str) -> str:
     """ Returns the string wrapped in cyan ANSI color codes. """
     return Colors.CYAN + string + Colors.END
 
-@staticmethod
 def light_gray(string: str) -> str:
     """ Returns the string wrapped in light gray ANSI color codes. """
     return Colors.LIGHT_GRAY + string + Colors.END
 
-@staticmethod
 def dark_gray(string: str) -> str:
     """ Returns the string wrapped in dark gray ANSI color codes. """
     return Colors.DARK_GRAY + string + Colors.END
 
-@staticmethod
 def light_red(string: str) -> str:
     """ Returns the string wrapped in light red ANSI color codes. """
     return Colors.LIGHT_RED + string + Colors.END
 
-@staticmethod
 def light_green(string: str) -> str:
     """ Returns the string wrapped in light green ANSI color codes. """
     return Colors.LIGHT_GREEN + string + Colors.END
 
-@staticmethod
 def yellow(string: str) -> str:
     """ Returns the string wrapped in yellow ANSI color codes. """
     return Colors.YELLOW + string + Colors.END
 
-@staticmethod
 def light_blue(string: str) -> str:
     """ Returns the string wrapped in light blue ANSI color codes. """
     return Colors.LIGHT_BLUE + string + Colors.END
 
-@staticmethod
 def light_purple(string: str) -> str:
     """ Returns the string wrapped in light purple ANSI color codes. """
     return Colors.LIGHT_PURPLE + string + Colors.END
 
-@staticmethod
 def light_cyan(string: str) -> str:
     """ Returns the string wrapped in light cyan ANSI color codes. """
     return Colors.LIGHT_CYAN + string + Colors.END
 
-@staticmethod
 def light_white(string: str) -> str:
     """ Returns the string wrapped in light white ANSI color codes. """
     return Colors.LIGHT_WHITE + string + Colors.END
 
-@staticmethod
 def bold(string: str) -> str:
     """ Returns the string wrapped in bold ANSI color codes. """
     return Colors.BOLD + string + Colors.END
 
-@staticmethod
 def faint(string: str) -> str:
     """ Returns the string wrapped in faint ANSI color codes. """
     return Colors.FAINT + string + Colors.END
 
-@staticmethod
 def italic(string: str) -> str:
     """ Returns the string wrapped in italic ANSI color codes. """
     return Colors.ITALIC + string + Colors.END
 
-@staticmethod
 def underline(string: str) -> str:
     """ Returns the string wrapped in underline ANSI color codes. """
     return Colors.UNDERLINE + string + Colors.END
 
-@staticmethod
 def blink(string: str) -> str:
     """ Returns the string wrapped in blink ANSI color codes. """
     return Colors.BLINK + string + Colors.END
 
-@staticmethod
 def negative(string: str) -> str:
     """ Returns the string wrapped in negative ANSI color codes. """
     return Colors.NEGATIVE + string + Colors.END
 
-@staticmethod
 def crossed(string: str) -> str:
     """ Returns the string wrapped in crossed ANSI color codes. """
     return Colors.CROSSED + string + Colors.END

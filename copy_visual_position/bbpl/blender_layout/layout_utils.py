@@ -23,7 +23,7 @@
 # ----------------------------------------------
 
 import bpy
-from typing import Union
+from typing import Union, Optional
 
 def get_property_name_from_property_group(property_group: bpy.types.PropertyGroup, property_group_instance: type) -> str:
     # Attempts to retrieve the property name from a given PropertyGroup instance
@@ -36,7 +36,7 @@ def get_property_name_from_property_group(property_group: bpy.types.PropertyGrou
         
         prop_id_name = property_group.id_properties_ensure().name
 
-        def try_get_name_from_prop(test_pro_owner: Union[bpy.types.Node, bpy.types.PropertyGroup]) -> str | None:
+        def try_get_name_from_prop(test_pro_owner: Union[bpy.types.Node, bpy.types.PropertyGroup]) -> Optional[str]:
             if hasattr(test_pro_owner, prop_id_name):
                 test_prop = getattr(test_pro_owner, prop_id_name)
                 if isinstance(test_prop, property_group_instance):

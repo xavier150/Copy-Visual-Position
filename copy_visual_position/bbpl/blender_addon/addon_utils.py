@@ -25,10 +25,11 @@
 
 import os
 import addon_utils
+from typing import Tuple
 from .. import __internal__
 
 
-def get_addon_version(addon_name: str) -> tuple[int, int, int]:
+def get_addon_version(addon_name: str) -> Tuple[int, int, int]:
     version = (0, 0, 0)
     for mod in addon_utils.modules():  # type: ignore
         if mod.bl_info['name'] == addon_name:  # type: ignore

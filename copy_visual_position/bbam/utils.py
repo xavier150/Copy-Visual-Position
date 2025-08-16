@@ -118,7 +118,7 @@ def get_str_version(data: List[int]) -> str:
     return f'{data[0]}.{data[1]}.{data[2]}'
 
 
-def get_should_install(auto_install_range_data: Tuple[List[int], Union[List[int], str]]):
+def get_should_install_for_curren_version(auto_install_range_data: Tuple[List[int], Union[List[int], str]]):
     min_version = auto_install_range_data[0]
     max_version = auto_install_range_data[1]
     blender_version = bpy.app.version

@@ -24,9 +24,8 @@
 
 import bpy
 import mathutils
-from typing import List, Optional
+from typing import List, Optional, Union
 from . import scene_utils
-from . import utils
 
 
 class NLA_Save:
@@ -406,7 +405,24 @@ def copy_drivervariable_attr(a: bpy.types.DriverVariable, b: bpy.types.DriverVar
 
 def copy_drivers(src: bpy.types.Object, dst: bpy.types.Object):
     print_fails = False
-    
+
+    def try_add_array_driver(target_data: bpy.types.ID, data_path: str, index: int) -> Optional[Union[bpy.types.FCurve, List[bpy.types.FCurve]]]:
+        try:
+            return dst.driver_add(data_path, index)
+        except Exception as e:
+            if print_fails:
+                print(f"Failed to add array driver for {data_path} on {dst.name}: {e}")
+            return None
+
+
+    def try_add_driver(target_data: bpy.types.ID, data_path: str) -> Optional[Union[bpy.types.FCurve, List[bpy.types.FCurve]]]:
+        try:
+            return dst.driver_add(data_path)
+        except Exception as e:
+            if print_fails:
+                print(f"Failed to add driver for {data_path} on {dst.name}: {e}")
+            return None
+
     # Copy drivers
     if src.animation_data:
         for d1 in src.animation_data.drivers:
@@ -414,38 +430,39 @@ def copy_drivers(src: bpy.types.Object, dst: bpy.types.Object):
             prop = src.path_resolve(source_data_path, False)
             if isinstance(prop, bpy.types.bpy_prop_array):
                 # Array Drivers
-                d2 = dst.driver_add(source_data_path ,d1.array_index)
+                d2 = try_add_array_driver(dst, source_data_path, d1.array_index)
             else:
                 # Simple Drivers
-                d2 = dst.driver_add(source_data_path)
+                d2 = try_add_driver(dst, source_data_path)
 
-            copy_fcurve_attr(d1, d2, print_fails)
-            copy_driver_attr(d1.driver, d2.driver, print_fails)
+            if isinstance(d2, bpy.types.FCurve):
+                copy_fcurve_attr(d1, d2, print_fails)
+                copy_driver_attr(d1.driver, d2.driver, print_fails)
 
-            # Remove default modifiers, variables, etc.
-            for m in d2.modifiers:
-                d2.modifiers.remove(m)
-            for v in d2.driver.variables:
-                d2.driver.variables.remove(v)
+                # Remove default modifiers, variables, etc.
+                for m in d2.modifiers:
+                    d2.modifiers.remove(m)
+                for v in d2.driver.variables:
+                    d2.driver.variables.remove(v)
 
-            # Copy modifiers
-            for m1 in d1.modifiers:
-                m2 = d2.modifiers.new(type=m1.type)
-                copy_modifier_attr(m1, m2, print_fails)
+                # Copy modifiers
+                for m1 in d1.modifiers:
+                    m2 = d2.modifiers.new(type=m1.type)
+                    copy_modifier_attr(m1, m2, print_fails)
 
-            # Copy variables
-            for v1 in d1.driver.variables:
-                v2 = d2.driver.variables.new()
-                copy_drivervariable_attr(v1, v2, print_fails)
-                for i in range(len(v1.targets)):
-                    copy_drivertarget_attr(v1.targets[i], v2.targets[i], print_fails)
-                    # Switch self reference targets to new self
-                    if v2.targets[i].id == src:
-                        v2.targets[i].id = dst
+                # Copy variables
+                for v1 in d1.driver.variables:
+                    v2 = d2.driver.variables.new()
+                    copy_drivervariable_attr(v1, v2, print_fails)
+                    for i in range(len(v1.targets)):
+                        copy_drivertarget_attr(v1.targets[i], v2.targets[i], print_fails)
+                        # Switch self reference targets to new self
+                        if v2.targets[i].id == src:
+                            v2.targets[i].id = dst
 
-            # Copy keyframes
-            copy_fcurve = ProxyCopy_FCurve(d1)
-            copy_fcurve.paste_data_on(d2)
+                # Copy keyframes
+                copy_fcurve = ProxyCopy_FCurve(d1)
+                copy_fcurve.paste_data_on(d2)
 
 
 class AnimationManagment():

@@ -30,6 +30,7 @@ from . import addon_file_management
 from . import utils
 from . import blender_utils
 from . import bbam_addon_config
+from .bbam_addon_config.bbam_addon_config_type import BBAM_AddonConfig
 
 def process_install_from_blender(current_only: bool = False):
     print("Installing addon from Blender...")
@@ -53,7 +54,7 @@ def process_install_from_blender(current_only: bool = False):
 
 def install_from_blender_with_build_data(
     addon_path: str, 
-    addon_config: bbam_addon_config.bbam_addon_config_type.BBAM_AddonConfig,
+    addon_config: BBAM_AddonConfig,
     current_only: bool = False,
 ):
     """
@@ -68,11 +69,12 @@ def install_from_blender_with_build_data(
     # Process each build specified in the manifest data
     for build_key in addon_config.builds:
         build_data = addon_config.builds[build_key]
-        should_install = utils.get_should_install(build_data.auto_install_range)
+        should_install = utils.get_should_install_for_curren_version(build_data.auto_install_range)
         if current_only:
+            # Build only for the current Blender version, so build only if the addon should be installed
             should_build = should_install
         else:
-            should_build = should_install
+            should_build = True
 
         if should_build:
             print("")
@@ -101,6 +103,7 @@ def install_from_blender_with_build_data(
             zip_file = addon_file_management.zip_addon_folder(
                 src = temp_addon_path, 
                 addon_path = addon_path, 
+                addon_config = addon_config,
                 build_config = build_data,
                 blender_executable_path = blender_executable_path
             )

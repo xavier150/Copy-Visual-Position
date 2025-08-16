@@ -51,7 +51,7 @@ def generate_new_manifest(
     data["website"] = addon_manifest.website_url
     data["type"] = addon_manifest.type.get_as_string()
     data["tags"] = addon_manifest.tags
-    data["blender_version_min"] = build_config.get_version_as_string()
+    data["blender_version_min"] = build_config.get_min_blender_version_as_string()
     data["license"] = addon_manifest.license
     data["copyright"] = addon_manifest.copyright
 

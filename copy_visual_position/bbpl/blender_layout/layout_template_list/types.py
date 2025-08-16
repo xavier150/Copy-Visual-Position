@@ -23,6 +23,7 @@
 # ----------------------------------------------
 
 import bpy
+from typing import Optional
 from . import utils
 
 
@@ -56,7 +57,7 @@ class BBPL_UI_TemplateItem(bpy.types.PropertyGroup):
 class BBPL_UL_TemplateItemDraw(bpy.types.UIList):
     def draw_item(
         self, 
-        context: bpy.types.Context | None,
+        context: Optional[bpy.types.Context],
         layout: bpy.types.UILayout, 
         data: bpy.types.PropertyGroup, 
         item: BBPL_UI_TemplateItem, 

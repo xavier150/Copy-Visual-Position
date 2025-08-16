@@ -92,10 +92,10 @@ def get_childs(obj: bpy.types.Object) -> List[bpy.types.Object]:
     Returns:
         list: A list of direct children objects.
     """
-    if bpy.context is None:
+    scene = bpy.context.scene
+    if scene is None:
         return []
 
-    scene = bpy.context.scene
     childs_obj: List[bpy.types.Object] = []
     for child_obj in scene.objects:
         # Only include objects that are not linked from external libraries
@@ -121,8 +121,8 @@ def get_armature_root_bone(obj: bpy.types.Object) -> Optional[bpy.types.Bone]:
         armature = obj.data
         
         for bone in armature.bones:  # type: ignore
-            if bone.parent is None:
-                return bone
+            if bone.parent is None:  # type: ignore
+                return bone  # type: ignore
     return None
 
 
@@ -168,10 +168,12 @@ def get_recursive_childs(target_obj: bpy.types.Object) -> List[bpy.types.Object]
     Returns:
         list: A list of recursive children objects.
     """
-    if bpy.context is None:
+
+    scene = bpy.context.scene
+    if scene is None:
         return []
 
-    def get_recursive_parent(parent, start_obj):
+    def get_recursive_parent(parent: bpy.types.Object, start_obj: bpy.types.Object) -> bool:
         if start_obj.parent:
             if start_obj.parent == parent:
                 return True
@@ -180,8 +182,8 @@ def get_recursive_childs(target_obj: bpy.types.Object) -> List[bpy.types.Object]
                     return True
         return False
 
-    scene = bpy.context.scene
-    save_objs = []
+
+    save_objs: List[bpy.types.Object] = []
     for obj in scene.objects:
         if get_recursive_parent(target_obj, obj):
             save_objs.append(obj)
@@ -308,13 +310,13 @@ def set_windows_clipboard(text: str):
 def get_obj_childs(obj: bpy.types.Object) -> List[bpy.types.Object]:
     # Get all direct childs of a object
 
-    if bpy.context is None:
+    scene = bpy.context.scene
+    if scene is None:
         return []
 
-    scene = bpy.context.scene
     childs_obj: List[bpy.types.Object] = []
     for childObj in scene.objects:
-        if childObj.library is None:
+        if childObj.library is None:  # type: ignore
             pare = childObj.parent
             if pare is not None:
                 if pare.name == obj.name:
@@ -326,12 +328,10 @@ def get_recursive_obj_childs(obj: bpy.types.Object, include_self: bool = False) 
     # Get all recursive childs of a object
     # include_self is True obj is index 0
 
-    if bpy.context is None:
-        return []
 
     save_objects: List[bpy.types.Object] = []
 
-    def tryAppend(obj):
+    def tryAppend(obj: bpy.types.Object) -> None:
         if obj.name in bpy.context.scene.objects:  # type: ignore
             save_objects.append(obj)
 

@@ -101,7 +101,9 @@ def update_bone_shape(
     Raises:
         KeyError: If the bone name or override transform bone name is not found in the armature.
     '''
-    
+    if armature.pose is None:
+        return False
+
     bone = armature.pose.bones.get(bone_name)
     if not bone:
         raise KeyError(f"Bone '{bone_name}' not found in the armature.")
@@ -154,7 +156,7 @@ if bpy.app.version <= (3, 6, 0):
         return group  # type: ignore
 
 
-    def direct_add_to_bone_group(armature: bpy.types.Object, bones: Union[str, list[str]], group_name: str):
+    def direct_add_to_bone_group(armature: bpy.types.Object, bones: Union[str, List[str]], group_name: str):
         """
         Deprecated in Blender 4.0
         Adds the specified bones to a bone group in the armature.
