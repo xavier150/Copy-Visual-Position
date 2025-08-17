@@ -1,36 +1,20 @@
-# ====================== BEGIN GPL LICENSE BLOCK ============================
+# SPDX-FileCopyrightText: 2023-2025 Xavier Loux (BleuRaven)
 #
-#  This program is free software: you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation, either version 3 of the License, or
-#  (at your option) any later version.
-#
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with this program.	 If not, see <http://www.gnu.org/licenses/>.
-#  All rights reserved.
-#
-# ======================= END GPL LICENSE BLOCK =============================
+# SPDX-License-Identifier: GPL-3.0-or-later
 
 # ----------------------------------------------
 #  BPL -> BleuRaven Python Library
 #  https://github.com/xavier150/BPL
-#  BleuRaven.fr
-#  XavierLoux.com
 # ----------------------------------------------
 
-# This use ANSI color codes. 
-# You can found it all here -> https://gist.github.com/JBlond/2fea43a3049b38287e5e9cefc87b2124
-# This file use the code of rene-d -> https://gist.github.com/rene-d/9e584a7dd2935d0f461904b9f2950007
 
-
-
-# SGR color constants
-# rene-d 2018
+# This file contains ANSI color codes implementation.
+# Based on ANSI SGR color codes (public domain standard).
+# Inspired by an implementation from rene-d (2018).
+# Source: https://gist.github.com/rene-d/9e584a7dd2935d0f461904b9f2950007
+# 
+# Additional ANSI color codes reference:
+# https://gist.github.com/JBlond/2fea43a3049b38287e5e9cefc87b2124
 
 class Colors:
     """ ANSI color codes """

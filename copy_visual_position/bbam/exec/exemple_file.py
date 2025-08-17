@@ -1,3 +1,12 @@
+# SPDX-FileCopyrightText: 2024-2025 Xavier Loux (BleuRaven)
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+# ----------------------------------------------
+#  BBAM -> BleuRaven Blender Addon Manager
+#  https://github.com/xavier150/BBAM
+# ----------------------------------------------
+
 # Run this script in Blender to generate and install the addon.
 # Ensure the paths in `addon_directories` point to the correct addon directories.
 # For more details, visit the GitHub repository: https://github.com/xavier150/BBAM
